@@ -8,10 +8,10 @@ package-lock.json
 .env.*.local
 
 # Uploaded files
-soet-portal/uploads/**/*
-!soet-portal/uploads/.gitkeep
-!soet-portal/uploads/materials/.gitkeep
-!soet-portal/uploads/pyqs/.gitkeep
+uploads/materials/*
+uploads/pyqs/*
+!uploads/materials/.gitkeep
+!uploads/pyqs/.gitkeep
 
 # Logs
 *.log
