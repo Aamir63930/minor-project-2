@@ -6,40 +6,40 @@
   <title>Upload Material — SOET Portal</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
   <style>
     :root { --blue:#003399; --accent:#FFB800; }
     body { background:#f0f4ff; font-family:'Segoe UI',sans-serif; }
     .upload-card {
       background:white; border-radius:20px; padding:32px;
-      box-shadow:0 4px 20px rgba(0,0,0,0.08); max-width:700px; margin:0 auto;
+      box-shadow:0 4px 20px rgba(0,0,0,0.08);
+      max-width:700px; margin:0 auto;
     }
     .form-label { font-weight:600; font-size:0.85rem; color:#555; }
     .form-control, .form-select {
-      border-radius:10px; border-color:#e0e7ff; padding:10px 14px;
-      font-size:0.9rem;
+      border-radius:10px; border-color:#e0e7ff;
+      padding:10px 14px; font-size:0.9rem;
     }
     .form-control:focus, .form-select:focus {
-      border-color:var(--blue); box-shadow:0 0 0 3px rgba(0,51,153,0.12);
+      border-color:var(--blue);
+      box-shadow:0 0 0 3px rgba(0,51,153,0.12);
     }
     .btn-submit {
       background:linear-gradient(135deg,var(--blue),#0055cc);
       color:white; border:none; border-radius:12px;
       padding:13px 30px; font-weight:700; font-size:1rem;
-      transition:all 0.3s;
+      width:100%; cursor:pointer; transition:all 0.3s;
     }
     .btn-submit:hover {
       background:linear-gradient(135deg,#002277,#003399);
-      color:white; transform:translateY(-1px);
-      box-shadow:0 6px 20px rgba(0,51,153,0.3);
+      transform:translateY(-1px);
     }
     .drop-zone {
       border:2px dashed #c5cae9; border-radius:14px;
       padding:36px 20px; text-align:center;
       cursor:pointer; transition:all 0.2s; background:#f8f9ff;
     }
-    .drop-zone:hover, .drop-zone.dragover {
-      border-color:var(--blue); background:#eef2ff;
-    }
+    .drop-zone:hover { border-color:var(--blue); background:#eef2ff; }
     .drop-zone.has-file { border-color:#2e7d32; background:#f1f8e9; }
     .unit-grid {
       display:grid; grid-template-columns:repeat(6,1fr); gap:8px;
@@ -49,23 +49,28 @@
       padding:10px 0; text-align:center; cursor:pointer;
       font-weight:700; font-size:0.88rem; color:#666;
       transition:all 0.2s; background:white;
+      user-select:none;
     }
-    .unit-btn:hover { border-color:var(--blue); color:var(--blue); }
-    .unit-btn.selected {
-      background:var(--blue); color:white; border-color:var(--blue);
-    }
+    .unit-btn:hover { border-color:var(--blue); color:var(--blue); background:#f0f4ff; }
+    .unit-btn.selected { background:var(--blue); color:white; border-color:var(--blue); }
     .char-count { font-size:0.72rem; color:#aaa; }
+    .alert-msg {
+      padding:10px 16px; border-radius:10px;
+      margin-bottom:16px; font-size:0.88rem;
+      display:none;
+    }
+    .alert-msg.show { display:block; }
+    .alert-success-msg { background:#e8f5e9; color:#2e7d32; border:1px solid #c8e6c9; }
+    .alert-error-msg { background:#fce4ec; color:#c62828; border:1px solid #f8bbd0; }
   </style>
-  <link href="/css/main.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
 </head>
-<body data-authenticated="true">
+<body>
 
 <%- include('../partials/facultyNavbar') %>
 
 <div class="container-fluid px-3 px-md-4 py-4">
-
   <div class="upload-card">
+
     <div class="d-flex align-items-center gap-3 mb-4">
       <div style="width:52px;height:52px;background:#eef2ff;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;color:var(--blue);">
         <i class="bi bi-cloud-upload-fill"></i>
@@ -77,157 +82,219 @@
     </div>
 
     <% if (success) { %>
-    <div id="page-toast" data-message="<%= success %>" data-type="success" class="d-none"></div>
+      <div class="alert-msg alert-success-msg show">
+        <i class="bi bi-check-circle-fill me-2"></i><%= success %>
+      </div>
     <% } %>
     <% if (error) { %>
-    <div id="page-toast" data-message="<%= error %>" data-type="error" class="d-none"></div>
+      <div class="alert-msg alert-error-msg show">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i><%= error %>
+      </div>
     <% } %>
 
-    <form action="/faculty/material/upload" method="POST" enctype="multipart/form-data" id="uploadForm" data-loading="Uploading material... Please wait">
+    <div id="jsAlert" class="alert-msg"></div>
+
+    <form action="/faculty/material/upload" method="POST" enctype="multipart/form-data" id="uploadForm">
 
       <!-- Subject -->
       <div class="mb-4">
         <label class="form-label">Subject <span class="text-danger">*</span></label>
-        <select name="subjectCode" class="form-select" required id="subjectSelect">
+        <select name="subjectCode" id="subjectSelect" class="form-select" required>
           <option value="">— Select Subject —</option>
           <% subjectOptions.forEach(s => { %>
-            <option value="<%= s.subjectCode %>"
-              <%= (typeof query !== 'undefined' && query.subject === s.subjectCode) ? 'selected' : '' %>>
+            <option value="<%= s.subjectCode %>">
               [Sem <%= s.semester %>] <%= s.subjectCode %> — <%= s.name %>
             </option>
           <% }); %>
         </select>
       </div>
 
-      <!-- Unit Selection -->
+      <!-- Unit -->
       <div class="mb-4">
         <label class="form-label d-block">Unit <span class="text-danger">*</span></label>
-        <div class="unit-grid" id="unitGrid">
-          <% for (let u = 1; u <= 6; u++) { %>
-            <div class="unit-btn" data-unit="<%= u %>" onclick="selectUnit(<%= u %>)">
-              Unit <%= u %>
-            </div>
-          <% } %>
+        <div class="unit-grid">
+          <div class="unit-btn" onclick="selectUnit(1)">Unit 1</div>
+          <div class="unit-btn" onclick="selectUnit(2)">Unit 2</div>
+          <div class="unit-btn" onclick="selectUnit(3)">Unit 3</div>
+          <div class="unit-btn" onclick="selectUnit(4)">Unit 4</div>
+          <div class="unit-btn" onclick="selectUnit(5)">Unit 5</div>
+          <div class="unit-btn" onclick="selectUnit(6)">Unit 6</div>
         </div>
-        <input type="hidden" name="unit" id="unitInput" required>
-        <div class="text-muted mt-1" style="font-size:0.75rem;">Click to select the unit this material belongs to</div>
+        <input type="hidden" name="unit" id="unitInput">
+        <div class="text-muted mt-1" style="font-size:0.75rem;">Click to select which unit this material belongs to</div>
       </div>
 
       <!-- Title -->
       <div class="mb-4">
         <label class="form-label">Material Title <span class="text-danger">*</span></label>
-        <input type="text" name="title" class="form-control" maxlength="150"
-          placeholder="e.g. Unit 3 Notes — Neural Networks" required
-          oninput="updateCharCount(this,'titleCount',150)">
+        <input type="text" name="title" id="titleInput" class="form-control"
+          maxlength="150" required
+          placeholder="e.g. Unit 3 Notes — Neural Networks"
+          oninput="document.getElementById('titleCount').textContent = this.value.length">
         <div class="d-flex justify-content-end mt-1">
           <span class="char-count"><span id="titleCount">0</span>/150</span>
         </div>
       </div>
 
-      <!-- Description (optional) -->
+      <!-- Description -->
       <div class="mb-4">
         <label class="form-label">Description <span class="text-muted">(optional)</span></label>
         <textarea name="description" class="form-control" rows="2" maxlength="300"
           placeholder="Brief description of what this file covers..."
-          oninput="updateCharCount(this,'descCount',300)"></textarea>
+          oninput="document.getElementById('descCount').textContent = this.value.length"></textarea>
         <div class="d-flex justify-content-end mt-1">
           <span class="char-count"><span id="descCount">0</span>/300</span>
         </div>
       </div>
 
-      <!-- File Drop Zone -->
+      <!-- File Upload -->
       <div class="mb-4">
         <label class="form-label">PDF File <span class="text-danger">*</span></label>
         <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
           <i class="bi bi-file-earmark-pdf fs-1 mb-2 d-block" style="color:#e0e0e0;" id="dropIcon"></i>
           <div class="fw-semibold" style="color:#666;" id="dropText">Click to browse or drag & drop PDF here</div>
-          <div class="text-muted mt-1" style="font-size:0.78rem;" id="dropSub">Maximum file size: 20MB</div>
+          <div style="color:#aaa;font-size:0.78rem;margin-top:4px;" id="dropSub">Maximum file size: 20MB</div>
         </div>
-        <input type="file" name="file" id="fileInput" accept=".pdf" class="d-none" required
-          onchange="if(FileValidator.validate(this,'fileValidationMsg')) handleFile(this)">
-        <div id="fileValidationMsg" class="file-validation-msg"></div>
+        <input type="file" name="file" id="fileInput" accept=".pdf,application/pdf"
+          class="d-none" onchange="handleFileSelect(this)">
+        <div id="fileMsg" style="font-size:0.78rem;margin-top:6px;"></div>
       </div>
 
-      <div class="d-flex gap-3">
-        <button type="submit" class="btn btn-submit flex-grow-1" id="submitBtn">
-          <i class="bi bi-cloud-upload me-2"></i>Upload Material
-        </button>
-        <a href="/faculty/dashboard" class="btn btn-outline-secondary" style="border-radius:12px;padding:13px 20px;">
-          Cancel
-        </a>
-      </div>
+      <button type="button" class="btn-submit" onclick="submitForm()">
+        <i class="bi bi-cloud-upload me-2"></i>Upload Material
+      </button>
+
     </form>
+
+    <div class="mt-3 text-center">
+      <a href="/faculty/dashboard" class="text-muted" style="font-size:0.85rem;">
+        <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+      </a>
+    </div>
+
   </div>
 </div>
 
-<script>
-  function selectUnit(u) {
-    document.querySelectorAll('.unit-btn').forEach(b => b.classList.remove('selected'));
-    document.querySelector(`[data-unit="${u}"]`).classList.add('selected');
-    document.getElementById('unitInput').value = u;
-  }
-
-  function handleFile(input) {
-    const file = input.files[0];
-    const zone = document.getElementById('dropZone');
-    if (file) {
-      zone.classList.add('has-file');
-      document.getElementById('dropIcon').style.color = '#2e7d32';
-      document.getElementById('dropIcon').className = 'bi bi-file-earmark-check fs-1 mb-2 d-block';
-      document.getElementById('dropText').textContent = file.name;
-      document.getElementById('dropSub').textContent = `${(file.size/1024/1024).toFixed(2)} MB · PDF`;
-    }
-  }
-
-  function updateCharCount(input, countId, max) {
-    document.getElementById(countId).textContent = input.value.length;
-  }
-
-  // Drag & drop
-  const dropZone = document.getElementById('dropZone');
-  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
-  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-  dropZone.addEventListener('drop', e => {
-    e.preventDefault(); dropZone.classList.remove('dragover');
-    const file = e.dataTransfer.files[0];
-    if (file && file.type === 'application/pdf') {
-      const input = document.getElementById('fileInput');
-      const dt = new DataTransfer();
-      dt.items.add(file);
-      input.files = dt.files;
-      handleFile(input);
-    } else {
-      alert('Please drop a PDF file only.');
-    }
-  });
-
-  // Pre-select subject from query param
-  const urlParams = new URLSearchParams(window.location.search);
-  const subjectParam = urlParams.get('subject');
-  if (subjectParam) {
-    document.getElementById('subjectSelect').value = subjectParam;
-  }
-
-  // Form submit: validate unit
-  document.getElementById('uploadForm').addEventListener('submit', function(e) {
-    if (!document.getElementById('unitInput').value) {
-      e.preventDefault();
-      alert('Please select a unit (1-6) for this material.');
-    }
-  });
-</script>
 <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="/js/main.js"></script>
 <script>
+
+  // ── Select2 init ──
   $(document).ready(function() {
     $('#subjectSelect').select2({
       placeholder: '— Search or select subject —',
       allowClear: true,
       width: '100%'
     });
+    var urlParams = new URLSearchParams(window.location.search);
+    var subjectParam = urlParams.get('subject');
+    if (subjectParam) {
+      $('#subjectSelect').val(subjectParam).trigger('change');
+    }
   });
+
+  // ── Unit selection ──
+  function selectUnit(u) {
+    document.querySelectorAll('.unit-btn').forEach(function(b) {
+      b.classList.remove('selected');
+    });
+    document.querySelectorAll('.unit-btn')[u - 1].classList.add('selected');
+    document.getElementById('unitInput').value = u;
+  }
+
+  // ── File select ──
+  function handleFileSelect(input) {
+    var file = input.files[0];
+    if (!file) return;
+
+    var msgEl = document.getElementById('fileMsg');
+
+    if (file.type !== 'application/pdf') {
+      msgEl.textContent = 'Only PDF files are allowed.';
+      msgEl.style.color = '#c62828';
+      input.value = '';
+      return;
+    }
+
+    if (file.size > 20 * 1024 * 1024) {
+      msgEl.textContent = 'File too large. Maximum allowed is 20MB.';
+      msgEl.style.color = '#c62828';
+      input.value = '';
+      return;
+    }
+
+    var zone = document.getElementById('dropZone');
+    zone.classList.add('has-file');
+    document.getElementById('dropIcon').className = 'bi bi-file-earmark-check fs-1 mb-2 d-block';
+    document.getElementById('dropIcon').style.color = '#2e7d32';
+    document.getElementById('dropText').textContent = file.name;
+    document.getElementById('dropSub').textContent = (file.size / 1024 / 1024).toFixed(2) + ' MB · PDF';
+    msgEl.textContent = 'File ready to upload.';
+    msgEl.style.color = '#2e7d32';
+  }
+
+  // ── Drag and drop ──
+  var dz = document.getElementById('dropZone');
+  dz.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    dz.style.borderColor = '#003399';
+    dz.style.background = '#eef2ff';
+  });
+  dz.addEventListener('dragleave', function() {
+    dz.style.borderColor = '#c5cae9';
+    dz.style.background = '#f8f9ff';
+  });
+  dz.addEventListener('drop', function(e) {
+    e.preventDefault();
+    dz.style.borderColor = '#c5cae9';
+    dz.style.background = '#f8f9ff';
+    var file = e.dataTransfer.files[0];
+    if (file) {
+      var input = document.getElementById('fileInput');
+      var dt = new DataTransfer();
+      dt.items.add(file);
+      input.files = dt.files;
+      handleFileSelect(input);
+    }
+  });
+
+  // ── Show alert ──
+  function showAlert(msg, type) {
+    var el = document.getElementById('jsAlert');
+    el.textContent = msg;
+    el.className = 'alert-msg show ' + (type === 'error' ? 'alert-error-msg' : 'alert-success-msg');
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  // ── Submit ──
+  function submitForm() {
+    var subject = document.getElementById('subjectSelect').value ||
+                  $('select[name="subjectCode"]').val();
+    var unit = document.getElementById('unitInput').value;
+    var title = document.getElementById('titleInput').value.trim();
+    var file = document.getElementById('fileInput').files[0];
+
+    if (!subject) {
+      showAlert('Please select a subject.', 'error');
+      return;
+    }
+    if (!unit) {
+      showAlert('Please select a unit (1–6).', 'error');
+      return;
+    }
+    if (!title) {
+      showAlert('Please enter a title for this material.', 'error');
+      return;
+    }
+    if (!file) {
+      showAlert('Please select a PDF file to upload.', 'error');
+      return;
+    }
+
+    document.getElementById('uploadForm').submit();
+  }
+
 </script>
 </body>
 </html>
