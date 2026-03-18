@@ -21,21 +21,28 @@ app.use(helmet({
     directives: {
       defaultSrc: ["'self'"],
       styleSrc: [
-        "'self'", "'unsafe-inline'",
+        "'self'",
+        "'unsafe-inline'",
         "https://cdn.jsdelivr.net",
         "https://fonts.googleapis.com"
       ],
       scriptSrc: [
-        "'self'", "'unsafe-inline'",
+        "'self'",
+        "'unsafe-inline'",
         "https://cdn.jsdelivr.net"
       ],
+      scriptSrcAttr: ["'unsafe-inline'"],
       fontSrc: [
         "'self'",
         "https://cdn.jsdelivr.net",
         "https://fonts.gstatic.com"
       ],
       imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'"],
+      connectSrc: [
+        "'self'",
+        "https://login.microsoftonline.com",
+        "https://graph.microsoft.com"
+      ],
       frameSrc: ["'none'"],
     }
   },
