@@ -77,6 +77,14 @@
       display: flex; align-items: center; justify-content: center;
       font-size: 1.4rem;
     }
+    .interactive-stat:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(0,51,153,0.15);
+      border-color: rgba(0,51,153,0.3);
+    }
+    .interactive-stat:active {
+      transform: translateY(-1px);
+    }
 
     /* ── Subject Cards ── */
     .subject-card {
@@ -325,54 +333,79 @@
           </div>
         </div>
 
-        <!-- Quick Stats -->
-        <div class="col-6 col-md-3">
-          <div class="stat-card text-center">
-            <div class="stat-icon mx-auto mb-2" style="background:#eef2ff;">
-              <i class="bi bi-book-fill" style="color:var(--krmu-blue);"></i>
-            </div>
-            <div class="fw-bold fs-4" style="color:var(--krmu-blue);"><%= subjects.length %></div>
-            <div class="text-muted" style="font-size:0.75rem;">Subjects</div>
-          </div>
+<!-- Quick Stats — Interactive -->
+      <div class="col-6 col-md-3">
+      <div class="stat-card text-center interactive-stat" id="stat-subjects"
+        onclick="scrollToSubjects()"
+        style="cursor:pointer;"
+        title="Click to scroll to subjects">
+        <div class="stat-icon mx-auto mb-2" style="background:#eef2ff;">
+          <i class="bi bi-book-fill" style="color:var(--krmu-blue);"></i>
         </div>
-
-        <div class="col-6 col-md-3">
-          <div class="stat-card text-center">
-            <div class="stat-icon mx-auto mb-2" style="background:#e8f5e9;">
-              <i class="bi bi-file-earmark-text-fill" style="color:#2e7d32;"></i>
-            </div>
-            <div class="fw-bold fs-4" style="color:#2e7d32;">
-              <%= subjects.reduce((sum, s) => sum + s.materialCount, 0) %>
-            </div>
-            <div class="text-muted" style="font-size:0.75rem;">Materials</div>
-          </div>
+        <div class="fw-bold fs-4" style="color:var(--krmu-blue);"><%= subjects.length %></div>
+        <div class="text-muted" style="font-size:0.75rem;">Subjects</div>
+        <div style="font-size:0.65rem;color:#aaa;margin-top:2px;">
+          <i class="bi bi-arrow-down-short"></i> scroll down
         </div>
+      </div>
+      </div>
 
-        <div class="col-6 col-md-3">
-          <div class="stat-card text-center">
-            <div class="stat-icon mx-auto mb-2" style="background:#fff3e0;">
-              <i class="bi bi-file-earmark-pdf-fill" style="color:#e65100;"></i>
-            </div>
-            <div class="fw-bold fs-4" style="color:#e65100;">
-              <%= subjects.reduce((sum, s) => sum + s.pyqCount, 0) %>
-            </div>
-            <div class="text-muted" style="font-size:0.75rem;">PYQs</div>
-          </div>
+      <div class="col-6 col-md-3">
+      <div class="stat-card text-center interactive-stat" id="stat-materials"
+        onclick="openMaterialsDrawer()"
+        style="cursor:pointer;"
+        title="Click to view all materials">
+        <div class="stat-icon mx-auto mb-2" style="background:#e8f5e9;">
+          <i class="bi bi-file-earmark-text-fill" style="color:#2e7d32;"></i>
         </div>
-
-        <div class="col-6 col-md-3">
-          <div class="stat-card text-center">
-            <div class="stat-icon mx-auto mb-2" style="background:#f3e5f5;">
-              <i class="bi bi-award-fill" style="color:#6a1b9a;"></i>
-            </div>
-            <div class="fw-bold fs-4" style="color:#6a1b9a;">
-              <%= subjects.reduce((sum, s) => sum + (s.credits || 0), 0) %>
-            </div>
-            <div class="text-muted" style="font-size:0.75rem;">Credits</div>
-          </div>
+        <div class="fw-bold fs-4" style="color:#2e7d32;" id="total-materials-count">
+          <%= subjects.reduce((sum, s) => sum + s.materialCount, 0) %>
         </div>
+        <div class="text-muted" style="font-size:0.75rem;">Materials</div>
+        <div style="font-size:0.65rem;color:#aaa;margin-top:2px;">
+          <i class="bi bi-box-arrow-up-right"></i> view all
+        </div>
+      </div>
+      </div>
 
-        <!-- Attendance Placeholder -->
+      <div class="col-6 col-md-3">
+      <div class="stat-card text-center interactive-stat" id="stat-pyqs"
+        onclick="openPYQsDrawer()"
+        style="cursor:pointer;"
+        title="Click to view all PYQs">
+        <div class="stat-icon mx-auto mb-2" style="background:#fff3e0;">
+          <i class="bi bi-file-earmark-pdf-fill" style="color:#e65100;"></i>
+        </div>
+        <div class="fw-bold fs-4" style="color:#e65100;" id="total-pyqs-count">
+          <%= subjects.reduce((sum, s) => sum + s.pyqCount, 0) %>
+        </div>
+        <div class="text-muted" style="font-size:0.75rem;">PYQs</div>
+        <div style="font-size:0.65rem;color:#aaa;margin-top:2px;">
+          <i class="bi bi-box-arrow-up-right"></i> view all
+        </div>
+      </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+      <div class="stat-card text-center interactive-stat" id="stat-credits"
+        onclick="openCreditsModal()"
+        style="cursor:pointer;"
+        title="Click to see credits breakdown">
+        <div class="stat-icon mx-auto mb-2" style="background:#f3e5f5;">
+          <i class="bi bi-award-fill" style="color:#6a1b9a;"></i>
+        </div>
+        <div class="fw-bold fs-4" style="color:#6a1b9a;">
+          <%= subjects.reduce((sum, s) => sum + (s.credits || 0), 0) %>
+        </div>
+        <div class="text-muted" style="font-size:0.75rem;">Credits</div>
+        <div style="font-size:0.65rem;color:#aaa;margin-top:2px;">
+          <i class="bi bi-table"></i> breakdown
+        </div>
+      </div>
+      </div>
+
+
+<!-- Attendance Placeholder -->
         <div class="col-12 col-md-6">
           <div class="stat-card">
             <div class="d-flex align-items-center gap-2 mb-2">
@@ -424,7 +457,7 @@
   <!-- ═══════════════════════════════════════════ -->
   <!-- ROW 2: Subjects                            -->
   <!-- ═══════════════════════════════════════════ -->
-  <div class="section-heading">
+  <div class="section-heading" id="subjects-section">
     <i class="bi bi-journal-richtext" style="color:var(--krmu-blue);"></i>
     Enrolled Subjects — <%= semesterLabel %>
     <span class="sem-ribbon ms-2"><%= academicYear %></span>
@@ -625,6 +658,207 @@
 
   <% } %>
 
+<!-- ═══════════════════════════════════════════ -->
+<!-- MATERIALS DRAWER                           -->
+<!-- ═══════════════════════════════════════════ -->
+<div id="materials-overlay" onclick="closeMaterialsDrawer()"
+  style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:1040;">
+</div>
+<div id="materials-drawer"
+  style="display:none;position:fixed;top:0;right:0;height:100vh;width:100%;max-width:480px;background:white;z-index:1050;box-shadow:-8px 0 40px rgba(0,0,0,0.15);overflow-y:auto;transform:translateX(100%);transition:transform 0.3s ease;">
+
+  <!-- Drawer Header -->
+  <div style="background:linear-gradient(135deg,#003399,#0055cc);padding:20px 24px;position:sticky;top:0;z-index:1;">
+    <div class="d-flex align-items-center justify-content-between">
+      <div>
+        <div style="color:white;font-weight:700;font-size:1rem;">
+          <i class="bi bi-file-earmark-text-fill me-2"></i>All Study Materials
+        </div>
+        <div style="color:rgba(255,255,255,0.7);font-size:0.78rem;margin-top:2px;">
+          <%= subjects.reduce((sum, s) => sum + s.materialCount, 0) %> materials across <%= subjects.filter(s => s.materialCount > 0).length %> subjects
+        </div>
+      </div>
+      <button onclick="closeMaterialsDrawer()"
+        style="background:rgba(255,255,255,0.15);border:none;color:white;border-radius:10px;padding:8px 12px;cursor:pointer;font-size:0.85rem;">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Drawer Body -->
+  <div style="padding:16px;">
+    <% let hasMaterials = false; %>
+    <% subjects.forEach(function(subject) { %>
+      <% if (subject.materialCount > 0) { %>
+        <% hasMaterials = true; %>
+        <div style="margin-bottom:16px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+            <span style="background:#eef2ff;color:#003399;font-size:0.7rem;font-weight:700;padding:3px 10px;border-radius:6px;">
+              <%= subject.subjectCode %>
+            </span>
+            <span style="font-size:0.82rem;font-weight:600;color:#1a1a1a;"><%= subject.name %></span>
+            <span style="background:#e8f5e9;color:#2e7d32;font-size:0.68rem;font-weight:600;padding:2px 8px;border-radius:10px;margin-left:auto;white-space:nowrap;">
+              <%= subject.materialCount %> files
+            </span>
+          </div>
+          <% subject.unitCounts.forEach(function(uc) { %>
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:#f8f9ff;border-radius:10px;margin-bottom:6px;border:0.5px solid #e0e7ff;">
+              <div style="width:32px;height:32px;background:#eef2ff;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i class="bi bi-file-earmark-pdf-fill" style="color:#003399;font-size:0.9rem;"></i>
+              </div>
+              <div style="flex-grow:1;min-width:0;">
+                <div style="font-size:0.82rem;font-weight:600;color:#1a1a1a;">Unit <%= uc._id %> Materials</div>
+                <div style="font-size:0.72rem;color:#888;"><%= uc.count %> file<%= uc.count > 1 ? 's' : '' %> available</div>
+              </div>
+              <a href="/student/subjects/<%= subject.subjectCode %>/materials"
+                style="background:#003399;color:white;font-size:0.75rem;font-weight:600;padding:6px 14px;border-radius:8px;text-decoration:none;white-space:nowrap;flex-shrink:0;">
+                View <i class="bi bi-arrow-right ms-1"></i>
+              </a>
+            </div>
+          <% }); %>
+        </div>
+      <% } %>
+    <% }); %>
+    <% if (!hasMaterials) { %>
+      <div style="text-align:center;padding:48px 20px;color:#bbb;">
+        <i class="bi bi-folder2-open" style="font-size:2.5rem;display:block;margin-bottom:12px;"></i>
+        <div style="font-size:0.9rem;font-weight:600;">No materials uploaded yet</div>
+        <div style="font-size:0.8rem;margin-top:4px;">Check back when faculty uploads study materials</div>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- PYQs DRAWER                               -->
+<!-- ═══════════════════════════════════════════ -->
+<div id="pyqs-overlay" onclick="closePYQsDrawer()"
+  style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:1040;">
+</div>
+<div id="pyqs-drawer"
+  style="display:none;position:fixed;top:0;right:0;height:100vh;width:100%;max-width:480px;background:white;z-index:1050;box-shadow:-8px 0 40px rgba(0,0,0,0.15);overflow-y:auto;transform:translateX(100%);transition:transform 0.3s ease;">
+
+  <!-- Drawer Header -->
+  <div style="background:linear-gradient(135deg,#7b1fa2,#9c27b0);padding:20px 24px;position:sticky;top:0;z-index:1;">
+    <div class="d-flex align-items-center justify-content-between">
+      <div>
+        <div style="color:white;font-weight:700;font-size:1rem;">
+          <i class="bi bi-file-earmark-pdf-fill me-2"></i>All Previous Year Papers
+        </div>
+        <div style="color:rgba(255,255,255,0.7);font-size:0.78rem;margin-top:2px;">
+          <%= subjects.reduce((sum, s) => sum + s.pyqCount, 0) %> papers across <%= subjects.filter(s => s.pyqCount > 0).length %> subjects
+        </div>
+      </div>
+      <button onclick="closePYQsDrawer()"
+        style="background:rgba(255,255,255,0.15);border:none;color:white;border-radius:10px;padding:8px 12px;cursor:pointer;font-size:0.85rem;">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Drawer Body -->
+  <div style="padding:16px;">
+    <% let hasPYQs = false; %>
+    <% subjects.forEach(function(subject) { %>
+      <% if (subject.pyqCount > 0) { %>
+        <% hasPYQs = true; %>
+        <div style="margin-bottom:16px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+            <span style="background:#f3e5f5;color:#7b1fa2;font-size:0.7rem;font-weight:700;padding:3px 10px;border-radius:6px;">
+              <%= subject.subjectCode %>
+            </span>
+            <span style="font-size:0.82rem;font-weight:600;color:#1a1a1a;"><%= subject.name %></span>
+            <span style="background:#fff3e0;color:#e65100;font-size:0.68rem;font-weight:600;padding:2px 8px;border-radius:10px;margin-left:auto;white-space:nowrap;">
+              <%= subject.pyqCount %> paper<%= subject.pyqCount > 1 ? 's' : '' %>
+            </span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:#fdf6ff;border-radius:10px;border:0.5px solid #e1bee7;">
+            <div style="width:32px;height:32px;background:#f3e5f5;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <i class="bi bi-file-earmark-pdf-fill" style="color:#7b1fa2;font-size:0.9rem;"></i>
+            </div>
+            <div style="flex-grow:1;">
+              <div style="font-size:0.82rem;font-weight:600;color:#1a1a1a;"><%= subject.pyqCount %> PYQ paper<%= subject.pyqCount > 1 ? 's' : '' %> available</div>
+              <div style="font-size:0.72rem;color:#888;">Mid-Term &amp; End-Term papers</div>
+            </div>
+            <a href="/student/subjects/<%= subject.subjectCode %>/pyqs"
+              style="background:#7b1fa2;color:white;font-size:0.75rem;font-weight:600;padding:6px 14px;border-radius:8px;text-decoration:none;white-space:nowrap;flex-shrink:0;">
+              View <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+          </div>
+        </div>
+      <% } %>
+    <% }); %>
+    <% if (!hasPYQs) { %>
+      <div style="text-align:center;padding:48px 20px;color:#bbb;">
+        <i class="bi bi-file-earmark-x" style="font-size:2.5rem;display:block;margin-bottom:12px;"></i>
+        <div style="font-size:0.9rem;font-weight:600;">No PYQs uploaded yet</div>
+        <div style="font-size:0.8rem;margin-top:4px;">Check back closer to exam time</div>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- CREDITS MODAL                             -->
+<!-- ═══════════════════════════════════════════ -->
+<div id="credits-modal-overlay" onclick="closeCreditsModal()"
+  style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:1060;align-items:center;justify-content:center;">
+  <div onclick="event.stopPropagation()"
+    style="background:white;border-radius:20px;padding:28px;width:90%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,0.3);margin:auto;">
+
+    <!-- Modal Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div>
+        <div style="font-weight:700;font-size:1rem;color:#1a1a1a;">
+          <i class="bi bi-award-fill me-2" style="color:#6a1b9a;"></i>Credits Breakdown
+        </div>
+        <div style="font-size:0.78rem;color:#888;margin-top:2px;"><%= semesterLabel %></div>
+      </div>
+      <button onclick="closeCreditsModal()"
+        style="background:#f5f5f5;border:none;border-radius:10px;padding:8px 12px;cursor:pointer;color:#666;">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <!-- Credits Table -->
+    <div style="border:0.5px solid #e0e7ff;border-radius:12px;overflow:hidden;margin-bottom:16px;">
+      <div style="background:#eef2ff;padding:10px 16px;display:grid;grid-template-columns:1fr auto auto;gap:12px;">
+        <span style="font-size:0.72rem;font-weight:700;color:#003399;text-transform:uppercase;letter-spacing:0.5px;">Subject</span>
+        <span style="font-size:0.72rem;font-weight:700;color:#003399;text-transform:uppercase;letter-spacing:0.5px;">Type</span>
+        <span style="font-size:0.72rem;font-weight:700;color:#003399;text-transform:uppercase;letter-spacing:0.5px;">Cr</span>
+      </div>
+      <% subjects.forEach(function(subject) { %>
+        <div style="padding:10px 16px;display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center;border-top:0.5px solid #f0f0f0;">
+          <div>
+            <div style="font-size:0.82rem;font-weight:600;color:#1a1a1a;"><%= subject.name %></div>
+            <div style="font-size:0.68rem;color:#aaa;"><%= subject.subjectCode %></div>
+          </div>
+          <span style="font-size:0.7rem;font-weight:600;padding:2px 8px;border-radius:6px;
+            background:<%= subject.type === 'Lab' ? '#fff3e0' : '#eef2ff' %>;
+            color:<%= subject.type === 'Lab' ? '#e65100' : '#003399' %>;
+            white-space:nowrap;">
+            <%= subject.type %>
+          </span>
+          <span style="font-size:0.9rem;font-weight:700;color:#6a1b9a;text-align:right;"><%= subject.credits %></span>
+        </div>
+      <% }); %>
+    </div>
+
+    <!-- Total -->
+    <div style="background:linear-gradient(135deg,#f3e5f5,#fce4ec);border-radius:12px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div style="font-size:0.78rem;color:#7b1fa2;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Total Credits</div>
+        <div style="font-size:0.72rem;color:#aaa;margin-top:1px;">This semester</div>
+      </div>
+      <div style="font-size:2rem;font-weight:800;color:#6a1b9a;line-height:1;">
+        <%= subjects.reduce((sum, s) => sum + (s.credits || 0), 0) %>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
   <!-- Footer -->
   <div class="text-center text-muted py-4 mt-2" style="font-size:0.78rem; border-top: 1px solid #e0e7ff;">
     <i class="bi bi-shield-check me-1"></i>
@@ -661,6 +895,88 @@
       noResultsEl.remove();
     }
   }
+
+  // ── Subjects: smooth scroll ──
+function scrollToSubjects() {
+  var el = document.getElementById('subjects-section');
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    el.style.transition = 'background 0.3s';
+    el.style.background = '#eef2ff';
+    el.style.borderRadius = '8px';
+    el.style.padding = '6px 10px';
+    setTimeout(function() {
+      el.style.background = '';
+      el.style.padding = '';
+    }, 1200);
+  }
+}
+
+// ── Materials Drawer ──
+function openMaterialsDrawer() {
+  var overlay = document.getElementById('materials-overlay');
+  var drawer = document.getElementById('materials-drawer');
+  overlay.style.display = 'block';
+  drawer.style.display = 'block';
+  setTimeout(function() {
+    drawer.style.transform = 'translateX(0)';
+  }, 10);
+  document.body.style.overflow = 'hidden';
+}
+function closeMaterialsDrawer() {
+  var drawer = document.getElementById('materials-drawer');
+  var overlay = document.getElementById('materials-overlay');
+  drawer.style.transform = 'translateX(100%)';
+  setTimeout(function() {
+    drawer.style.display = 'none';
+    overlay.style.display = 'none';
+  }, 300);
+  document.body.style.overflow = '';
+}
+
+// ── PYQs Drawer ──
+function openPYQsDrawer() {
+  var overlay = document.getElementById('pyqs-overlay');
+  var drawer = document.getElementById('pyqs-drawer');
+  overlay.style.display = 'block';
+  drawer.style.display = 'block';
+  setTimeout(function() {
+    drawer.style.transform = 'translateX(0)';
+  }, 10);
+  document.body.style.overflow = 'hidden';
+}
+function closePYQsDrawer() {
+  var drawer = document.getElementById('pyqs-drawer');
+  var overlay = document.getElementById('pyqs-overlay');
+  drawer.style.transform = 'translateX(100%)';
+  setTimeout(function() {
+    drawer.style.display = 'none';
+    overlay.style.display = 'none';
+  }, 300);
+  document.body.style.overflow = '';
+}
+
+// ── Credits Modal ──
+function openCreditsModal() {
+  var overlay = document.getElementById('credits-modal-overlay');
+  overlay.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+function closeCreditsModal() {
+  var overlay = document.getElementById('credits-modal-overlay');
+  overlay.style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+// ── Close drawers on Escape key ──
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    closeMaterialsDrawer();
+    closePYQsDrawer();
+    closeCreditsModal();
+  }
+});
+
 </script>
 </body>
 </html>
