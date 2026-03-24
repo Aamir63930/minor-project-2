@@ -105,7 +105,7 @@ const subjects = [
   // SEMESTER 4 — CSE-AIML (0173)  ← YOUR CURRENT SEMESTER
   { subjectCode: 'KAI401', name: 'Mathematics for Machine Learning', shortName: 'Math-ML', courseCode: '0173', semester: 4, credits: 4, type: 'Theory', category: 'Core' },
   { subjectCode: 'KAI402', name: 'Machine Learning Fundamentals', shortName: 'ML', courseCode: '0173', semester: 4, credits: 4, type: 'Theory', category: 'Core' },
-  { subjectCode: 'KAI403', name: 'DBMS', shortName: 'CN', courseCode: '0173', semester: 4, credits: 3, type: 'Theory', category: 'Core' },
+  { subjectCode: 'KAI403', name: 'Computer Networks', shortName: 'CN', courseCode: '0173', semester: 4, credits: 3, type: 'Theory', category: 'Core' },
   { subjectCode: 'KAI404', name: 'Software Engineering & Agile Methods', shortName: 'SE', courseCode: '0173', semester: 4, credits: 3, type: 'Theory', category: 'Core' },
   { subjectCode: 'KAI405', name: 'Data Visualization & Storytelling', shortName: 'DV', courseCode: '0173', semester: 4, credits: 3, type: 'Theory', category: 'Core' },
   { subjectCode: 'KAI451', name: 'Machine Learning Lab', shortName: 'ML Lab', courseCode: '0173', semester: 4, credits: 1, type: 'Lab', category: 'Lab', hasTheory: false, hasLab: true },
