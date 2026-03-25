@@ -1,3 +1,5 @@
+const { notifyStudentsForSubject } = require('../utils/notificationHelper');
+
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
@@ -234,6 +236,18 @@ router.post('/material/upload', protect, facultyOnly,
         fileSize: req.file.size,
         fileType: req.file.mimetype,
         uploadedAt: new Date()
+      });
+
+      // Trigger notifications
+      notifyStudentsForSubject({
+        subjectCode,
+        subjectName: subject.name,
+        courseCode: subject.courseCode,
+        semester: subject.semester,
+        type: 'new_material',
+        title: `New Material: ${title.trim()}`,
+        message: `${req.user.name} uploaded new study material for ${subject.name} — Unit ${unitNum}: "${title.trim()}"`,
+        refId: null
       });
 
       return res.redirect('/faculty/upload/material?success=Study material uploaded successfully!');
