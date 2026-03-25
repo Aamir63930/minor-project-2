@@ -214,3 +214,146 @@ document.addEventListener('DOMContentLoaded', () => {
     SessionManager.init(sevenDays);
   }
 });
+
+// ─── Notification System ────────────────────────
+const NotifSystem = {
+
+  isOpen: false,
+
+  init() {
+    if (!document.getElementById('notif-bell')) return;
+    this.loadBadge();
+    setInterval(() => this.loadBadge(), 30000);
+    document.addEventListener('click', (e) => {
+      if (!document.getElementById('notif-wrapper').contains(e.target)) {
+        this.closeDropdown();
+      }
+    });
+  },
+
+  async loadBadge() {
+    try {
+      const res = await fetch('/notifications/unread-count');
+      const data = await res.json();
+      const badge = document.getElementById('notif-badge');
+      if (data.count > 0) {
+        badge.textContent = data.count > 99 ? '99+' : data.count;
+        badge.style.display = 'block';
+      } else {
+        badge.style.display = 'none';
+      }
+    } catch {}
+  },
+
+  async loadDropdown() {
+    try {
+      const res = await fetch('/notifications/dropdown');
+      const data = await res.json();
+      const list = document.getElementById('notif-list');
+      const empty = document.getElementById('notif-empty');
+
+      if (!data.notifications || data.notifications.length === 0) {
+        if (empty) empty.style.display = 'block';
+        return;
+      }
+      if (empty) empty.style.display = 'none';
+
+      const icons = {
+        new_material: { icon: 'bi-file-earmark-text-fill', color: '#003399', bg: '#eef2ff' },
+        new_pyq:      { icon: 'bi-file-earmark-pdf-fill',  color: '#7b1fa2', bg: '#f3e5f5' },
+        new_announcement: { icon: 'bi-megaphone-fill',     color: '#e65100', bg: '#fff3e0' },
+        system:       { icon: 'bi-info-circle-fill',       color: '#1565c0', bg: '#e3f2fd' }
+      };
+
+      list.innerHTML = data.notifications.map(n => {
+        const ic = icons[n.type] || icons.system;
+        const time = this.timeAgo(new Date(n.createdAt));
+        return `
+          <div class="notif-item" data-id="${n._id}" onclick="NotifSystem.markRead('${n._id}', this)"
+            style="padding:12px 16px;border-bottom:0.5px solid #f5f5f5;cursor:pointer;
+              background:${n.isRead ? 'white' : '#fafcff'};
+              display:flex;gap:12px;align-items:flex-start;transition:background 0.15s;">
+            <div style="width:36px;height:36px;border-radius:10px;background:${ic.bg};
+              display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <i class="bi ${ic.icon}" style="color:${ic.color};font-size:0.95rem;"></i>
+            </div>
+            <div style="flex-grow:1;min-width:0;">
+              <div style="font-size:0.82rem;font-weight:${n.isRead ? '500' : '700'};
+                color:#1a1a1a;line-height:1.3;margin-bottom:2px;">${n.title}</div>
+              <div style="font-size:0.72rem;color:#888;line-height:1.4;">${n.message}</div>
+              <div style="font-size:0.68rem;color:#bbb;margin-top:4px;">
+                ${n.subjectCode ? `<span style="background:#eef2ff;color:#003399;padding:1px 6px;border-radius:4px;font-weight:600;margin-right:4px;">${n.subjectCode}</span>` : ''}
+                ${time}
+              </div>
+            </div>
+            ${!n.isRead ? `<div style="width:7px;height:7px;background:#003399;border-radius:50%;flex-shrink:0;margin-top:5px;"></div>` : ''}
+          </div>`;
+      }).join('');
+
+      this.loadBadge();
+    } catch {}
+  },
+
+  async markRead(id, el) {
+    try {
+      await fetch(`/notifications/${id}/read`, { method: 'POST' });
+      if (el) {
+        el.style.background = 'white';
+        const dot = el.querySelector('[style*="border-radius:50%"]');
+        if (dot) dot.remove();
+        const title = el.querySelector('[style*="font-weight:700"]');
+        if (title) title.style.fontWeight = '500';
+      }
+      this.loadBadge();
+    } catch {}
+  },
+
+  async markAllRead() {
+    try {
+      await fetch('/notifications/read-all', { method: 'POST' });
+      document.querySelectorAll('.notif-item').forEach(item => {
+        item.style.background = 'white';
+        const dot = item.querySelector('[style*="border-radius:50%"]');
+        if (dot) dot.remove();
+      });
+      this.loadBadge();
+    } catch {}
+  },
+
+  openDropdown() {
+    const dd = document.getElementById('notif-dropdown');
+    dd.style.display = 'block';
+    this.isOpen = true;
+    this.loadDropdown();
+  },
+
+  closeDropdown() {
+    const dd = document.getElementById('notif-dropdown');
+    if (dd) dd.style.display = 'none';
+    this.isOpen = false;
+  },
+
+  timeAgo(date) {
+    const diff = Math.floor((Date.now() - date) / 1000);
+    if (diff < 60) return 'just now';
+    if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+    if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+    return Math.floor(diff / 86400) + 'd ago';
+  }
+};
+
+function toggleNotifDropdown() {
+  if (NotifSystem.isOpen) {
+    NotifSystem.closeDropdown();
+  } else {
+    NotifSystem.openDropdown();
+  }
+}
+
+function markAllRead() {
+  NotifSystem.markAllRead();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  NotifSystem.init();
+});
