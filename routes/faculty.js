@@ -370,6 +370,18 @@ router.post('/pyq/upload', protect, facultyOnly,
         uploadedAt: new Date()
       });
 
+      // Trigger notifications
+      notifyStudentsForSubject({
+        subjectCode,
+        subjectName: subject.name,
+        courseCode: subject.courseCode,
+        semester: subject.semester,
+        type: 'new_pyq',
+        title: `New PYQ: ${subject.name} — ${examType} ${year}`,
+        message: `${req.user.name} uploaded a ${examType} question paper for ${subject.name} (${year}, ${semesterType} semester)`,
+        refId: null
+      });
+
       return res.redirect('/faculty/upload/pyq?success=PYQ uploaded successfully!');
 
     } catch (err) {
