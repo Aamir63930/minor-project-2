@@ -105,6 +105,7 @@ app.set('views', path.join(__dirname, 'views'));
 app.use('/auth', require('./routes/auth'));
 app.use('/student', require('./routes/student'));
 app.use('/faculty', require('./routes/faculty'));
+app.use('/notifications', require('./routes/notifications'));
 
 // ─── Root Redirect ───────────────────────────
 app.get('/', (req, res) => res.redirect('/auth/landing'));
