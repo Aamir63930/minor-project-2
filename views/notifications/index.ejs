@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notifications — SOET Portal</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="/css/main.css" rel="stylesheet">
+  <style>
+    body { background:#f0f4ff; font-family:'Segoe UI',sans-serif; }
+    .notif-card {
+      background:white; border-radius:14px;
+      border:0.5px solid #e0e7ff;
+      padding:16px 20px; margin-bottom:10px;
+      display:flex; gap:14px; align-items:flex-start;
+      transition:all 0.2s; cursor:default;
+    }
+    .notif-card.unread { background:#fafcff; border-color:#c5d8ff; }
+    .notif-card.unread:hover { box-shadow:0 4px 16px rgba(0,51,153,0.08); }
+    .notif-icon {
+      width:44px; height:44px; border-radius:12px;
+      display:flex; align-items:center; justify-content:center;
+      font-size:1.2rem; flex-shrink:0;
+    }
+    .filter-btn {
+      padding:6px 16px; border-radius:20px; font-size:0.82rem;
+      font-weight:600; border:1.5px solid #e0e7ff;
+      background:white; color:#666; cursor:pointer;
+      transition:all 0.15s; text-decoration:none;
+      display:inline-block;
+    }
+    .filter-btn.active, .filter-btn:hover {
+      background:#003399; color:white; border-color:#003399;
+    }
+    .empty-state {
+      text-align:center; padding:60px 20px;
+      background:white; border-radius:16px;
+      border:2px dashed #e0e7ff; color:#bbb;
+    }
+    .unread-dot {
+      width:8px; height:8px; background:#003399;
+      border-radius:50%; flex-shrink:0; margin-top:6px;
+    }
+  </style>
+</head>
+<body data-authenticated="true">
+
+<%- include('../partials/studentNavbar') %>
+
+<div class="container-fluid px-3 px-md-4 py-4" style="max-width:800px;margin:0 auto;">
+
+  <!-- Header -->
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+    <div>
+      <h4 class="fw-bold mb-1">
+        <i class="bi bi-bell-fill me-2" style="color:#003399;"></i>Notifications
+        <% if (unreadCount > 0) { %>
+          <span style="background:#003399;color:white;font-size:0.65rem;font-weight:700;padding:3px 8px;border-radius:10px;vertical-align:middle;margin-left:6px;">
+            <%= unreadCount %> new
+          </span>
+        <% } %>
+      </h4>
+      <div class="text-muted" style="font-size:0.82rem;">Showing latest 50 notifications</div>
+    </div>
+    <% if (unreadCount > 0) { %>
+      <button onclick="markAllReadPage()"
+        style="background:#eef2ff;color:#003399;border:1.5px solid #c5d8ff;border-radius:10px;padding:8px 18px;font-weight:600;font-size:0.85rem;cursor:pointer;">
+        <i class="bi bi-check-all me-1"></i>Mark all as read
+      </button>
+    <% } %>
+  </div>
+
+  <!-- Filters -->
+  <div class="d-flex gap-2 flex-wrap mb-4">
+    <a href="/notifications" class="filter-btn <%= filter === 'all' ? 'active' : '' %>">All</a>
+    <a href="/notifications?filter=unread" class="filter-btn <%= filter === 'unread' ? 'active' : '' %>">
+      Unread <% if (unreadCount > 0) { %>(<%= unreadCount %>)<% } %>
+    </a>
+    <a href="/notifications?filter=materials" class="filter-btn <%= filter === 'materials' ? 'active' : '' %>">
+      <i class="bi bi-file-earmark-text me-1"></i>Materials
+    </a>
+    <a href="/notifications?filter=pyqs" class="filter-btn <%= filter === 'pyqs' ? 'active' : '' %>">
+      <i class="bi bi-file-earmark-pdf me-1"></i>PYQs
+    </a>
+  </div>
+
+  <!-- Notification List -->
+  <% if (notifications.length === 0) { %>
+    <div class="empty-state">
+      <i class="bi bi-bell-slash" style="font-size:3rem;display:block;margin-bottom:16px;"></i>
+      <h5 style="color:#999;">No notifications here</h5>
+      <p style="font-size:0.85rem;color:#bbb;margin:0;">
+        <%= filter === 'unread' ? 'You have no unread notifications.' : 'Notifications will appear here when faculty upload materials or PYQs for your subjects.' %>
+      </p>
+    </div>
+  <% } else { %>
+    <% const iconMap = {
+      new_material: { icon: 'bi-file-earmark-text-fill', color: '#003399', bg: '#eef2ff' },
+      new_pyq: { icon: 'bi-file-earmark-pdf-fill', color: '#7b1fa2', bg: '#f3e5f5' },
+      new_announcement: { icon: 'bi-megaphone-fill', color: '#e65100', bg: '#fff3e0' },
+      system: { icon: 'bi-info-circle-fill', color: '#1565c0', bg: '#e3f2fd' }
+    }; %>
+
+    <% let lastDate = null; %>
+    <% notifications.forEach(function(notif) { %>
+      <%
+        const notifDate = new Date(notif.createdAt).toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric' });
+        const ic = iconMap[notif.type] || iconMap.system;
+      %>
+
+      <% if (notifDate !== lastDate) { %>
+        <% lastDate = notifDate; %>
+        <div style="font-size:0.75rem;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:0.5px;margin:16px 0 8px 4px;">
+          <%= notifDate %>
+        </div>
+      <% } %>
+
+      <div class="notif-card <%= notif.isRead ? '' : 'unread' %>" id="notif-<%= notif._id %>">
+        <div class="notif-icon" style="background:<%= ic.bg %>;">
+          <i class="bi <%= ic.icon %>" style="color:<%= ic.color %>;"></i>
+        </div>
+        <div style="flex-grow:1;min-width:0;">
+          <div style="font-size:0.9rem;font-weight:<%= notif.isRead ? '500' : '700' %>;color:#1a1a1a;line-height:1.3;margin-bottom:4px;">
+            <%= notif.title %>
+          </div>
+          <div style="font-size:0.8rem;color:#555;line-height:1.5;margin-bottom:6px;">
+            <%= notif.message %>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <% if (notif.subjectCode) { %>
+              <span style="background:#eef2ff;color:#003399;font-size:0.7rem;font-weight:700;padding:2px 8px;border-radius:6px;">
+                <%= notif.subjectCode %>
+              </span>
+            <% } %>
+            <span style="font-size:0.72rem;color:#aaa;">
+              <i class="bi bi-clock me-1"></i>
+              <%= new Date(notif.createdAt).toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', hour12:true }) %>
+            </span>
+            <% if (!notif.isRead) { %>
+              <button onclick="markOneRead('<%= notif._id %>')"
+                style="background:none;border:none;color:#003399;font-size:0.72rem;font-weight:600;cursor:pointer;padding:0;">
+                Mark as read
+              </button>
+            <% } %>
+          </div>
+        </div>
+        <% if (!notif.isRead) { %>
+          <div class="unread-dot"></div>
+        <% } %>
+      </div>
+
+    <% }); %>
+  <% } %>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/main.js"></script>
+<script>
+  async function markOneRead(id) {
+    await fetch('/notifications/' + id + '/read', { method: 'POST' });
+    var card = document.getElementById('notif-' + id);
+    if (card) {
+      card.classList.remove('unread');
+      var dot = card.querySelector('.unread-dot');
+      if (dot) dot.remove();
+      var btn = card.querySelector('button');
+      if (btn) btn.remove();
+      var title = card.querySelector('[style*="font-weight:700"]');
+      if (title) title.style.fontWeight = '500';
+    }
+    NotifSystem.loadBadge();
+  }
+
+  async function markAllReadPage() {
+    await fetch('/notifications/read-all', { method: 'POST' });
+    window.location.reload();
+  }
+</script>
+</body>
+</html>
