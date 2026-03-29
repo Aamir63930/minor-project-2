@@ -357,3 +357,18 @@ function markAllRead() {
 document.addEventListener('DOMContentLoaded', function() {
   NotifSystem.init();
 });
+
+// ─── Toggle Announcement Pin ────────────────
+async function togglePin(id, btn) {
+  try {
+    const res = await fetch('/announcements/' + id + '/pin', { method: 'POST' });
+    const data = await res.json();
+    if (data.success) {
+      btn.innerHTML = data.isPinned
+        ? '<i class="bi bi-pin-fill me-1"></i>Unpin'
+        : '<i class="bi bi-pin me-1"></i>Pin';
+      btn.style.background = data.isPinned ? '#fff3e0' : '#f5f5f5';
+      btn.style.color = data.isPinned ? '#e65100' : '#999';
+    }
+  } catch {}
+}
