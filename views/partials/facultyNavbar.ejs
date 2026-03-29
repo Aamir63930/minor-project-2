@@ -30,6 +30,11 @@
             <i class="bi bi-file-earmark-plus"></i> Upload PYQ
           </a>
         </li>
+        <li class="nav-item">
+          <a class="nav-link text-white-50 d-flex align-items-center gap-1" href="/announcements">
+            <i class="bi bi-megaphone-fill"></i> Announcements
+          </a>
+        </li>        
         <% if (typeof user !== 'undefined' && user.role === 'admin') { %>
           <li class="nav-item">
             <a class="nav-link d-flex align-items-center gap-1" href="/faculty/admin/all-uploads"
