@@ -215,4 +215,30 @@ async function notifyAnnouncementStudents(ann) {
   }
 }
 
+// GET /announcements/latest-banner — for dashboard banner
+router.get('/latest-banner', protect, async (req, res) => {
+  try {
+    const { getCurrentSemester } = require('../utils/semesterHelper');
+    const currentSemester = req.user.enrollmentYear
+      ? getCurrentSemester(req.user.enrollmentYear)
+      : null;
+
+    const ann = await Announcement.findOne({
+      isActive: true,
+      $or: [{ expiresAt: null }, { expiresAt: { $gt: new Date() } }],
+      $or: [
+        { scope: 'college-wide' },
+        { scope: 'course-specific', targetCourses: req.user.courseCode },
+        { scope: 'semester-specific', targetCourses: req.user.courseCode, targetSemesters: currentSemester }
+      ]
+    })
+      .sort({ isPinned: -1, category: 1, createdAt: -1 })
+      .lean();
+
+    res.json({ announcement: ann });
+  } catch {
+    res.json({ announcement: null });
+  }
+});
+
 module.exports = router;
