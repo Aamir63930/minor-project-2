@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Announcements — SOET Portal</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="/css/main.css" rel="stylesheet">
+  <style>
+    body { background:#f0f4ff; font-family:'Segoe UI',sans-serif; }
+    .ann-card {
+      background:white; border-radius:16px;
+      border:0.5px solid #e0e7ff;
+      padding:20px 24px; margin-bottom:12px;
+      transition:all 0.2s;
+      position:relative; overflow:hidden;
+    }
+    .ann-card:hover { box-shadow:0 4px 20px rgba(0,51,153,0.08); }
+    .ann-card.pinned {
+      border-color:#FFB800;
+      border-left:4px solid #FFB800;
+    }
+    .ann-card.urgent {
+      border-left:4px solid #c62828;
+    }
+    .cat-badge {
+      font-size:0.72rem; font-weight:700;
+      padding:3px 10px; border-radius:20px;
+    }
+    .cat-General   { background:#eef2ff; color:#003399; }
+    .cat-Exam      { background:#fce4ec; color:#c62828; }
+    .cat-Holiday   { background:#e8f5e9; color:#2e7d32; }
+    .cat-Urgent    { background:#ffebee; color:#b71c1c; }
+    .cat-Assignment{ background:#fff3e0; color:#e65100; }
+    .cat-Result    { background:#f3e5f5; color:#7b1fa2; }
+    .pin-icon {
+      position:absolute; top:14px; right:16px;
+      color:#FFB800; font-size:1rem;
+    }
+    .scope-tag {
+      font-size:0.7rem; font-weight:600;
+      padding:2px 8px; border-radius:6px;
+      background:#f0f4ff; color:#666;
+    }
+    .empty-state {
+      text-align:center; padding:60px 20px;
+      background:white; border-radius:16px;
+      border:2px dashed #e0e7ff; color:#bbb;
+    }
+    .post-btn {
+      background:linear-gradient(135deg,#003399,#0055cc);
+      color:white; border:none; border-radius:12px;
+      padding:10px 22px; font-weight:700;
+      font-size:0.88rem; text-decoration:none;
+      display:inline-flex; align-items:center; gap:6px;
+      transition:all 0.2s;
+    }
+    .post-btn:hover { color:white; transform:translateY(-1px); }
+  </style>
+</head>
+<body data-authenticated="true">
+
+<% if (user.role === 'student') { %>
+  <%- include('../partials/studentNavbar') %>
+<% } else { %>
+  <%- include('../partials/facultyNavbar') %>
+<% } %>
+
+<div class="container-fluid px-3 px-md-4 py-4" style="max-width:860px;margin:0 auto;">
+
+  <!-- Header -->
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+    <div>
+      <h4 class="fw-bold mb-1">
+        <i class="bi bi-megaphone-fill me-2" style="color:#e65100;"></i>Announcements
+      </h4>
+      <div class="text-muted" style="font-size:0.82rem;">
+        <%= user.role === 'student' ? 'Announcements relevant to your course and semester' : 'All posted announcements' %>
+      </div>
+    </div>
+    <% if (user.role === 'faculty' || user.role === 'admin') { %>
+      <a href="/announcements/new" class="post-btn">
+        <i class="bi bi-plus-lg"></i>Post Announcement
+      </a>
+    <% } %>
+  </div>
+
+  <% if (typeof req !== 'undefined' && req.query && req.query.success) { %>
+    <div id="page-toast" data-message="<%= req.query.success %>" data-type="success" class="d-none"></div>
+  <% } %>
+
+  <% if (announcements.length === 0) { %>
+    <div class="empty-state">
+      <i class="bi bi-megaphone" style="font-size:3rem;display:block;margin-bottom:16px;"></i>
+      <h5 style="color:#999;">No announcements yet</h5>
+      <p style="font-size:0.85rem;color:#bbb;margin:0;">
+        <%= user.role === 'student' ? 'Your faculty haven\'t posted any announcements yet.' : 'Post your first announcement using the button above.' %>
+      </p>
+    </div>
+  <% } else { %>
+
+    <% const pinned = announcements.filter(a => a.isPinned); %>
+    <% const regular = announcements.filter(a => !a.isPinned); %>
+
+    <% if (pinned.length > 0) { %>
+      <div style="font-size:0.75rem;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">
+        <i class="bi bi-pin-fill me-1" style="color:#FFB800;"></i>Pinned
+      </div>
+      <% pinned.forEach(function(ann) { %>
+        <%- include('_card', { ann, user }) %>
+      <% }); %>
+      <% if (regular.length > 0) { %>
+        <div style="font-size:0.75rem;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:0.5px;margin:16px 0 8px;">
+          Recent
+        </div>
+      <% } %>
+    <% } %>
+
+    <% regular.forEach(function(ann) { %>
+      <%- include('_card', { ann, user }) %>
+    <% }); %>
+
+  <% } %>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/main.js"></script>
+</body>
+</html>
