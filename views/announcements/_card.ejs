@@ -1,0 +1,62 @@
+<div class="ann-card <%= ann.isPinned ? 'pinned' : '' %> <%= ann.category === 'Urgent' ? 'urgent' : '' %>">
+  <% if (ann.isPinned) { %>
+    <i class="bi bi-pin-fill pin-icon"></i>
+  <% } %>
+
+  <div class="d-flex align-items-center gap-2 flex-wrap mb-2">
+    <span class="cat-badge cat-<%= ann.category %>">
+      <% if (ann.category === 'Exam') { %><i class="bi bi-pencil-fill me-1"></i>
+      <% } else if (ann.category === 'Urgent') { %><i class="bi bi-exclamation-triangle-fill me-1"></i>
+      <% } else if (ann.category === 'Holiday') { %><i class="bi bi-calendar-check me-1"></i>
+      <% } else if (ann.category === 'Result') { %><i class="bi bi-trophy-fill me-1"></i>
+      <% } else { %><i class="bi bi-megaphone-fill me-1"></i>
+      <% } %>
+      <%= ann.category %>
+    </span>
+    <span class="scope-tag">
+      <%= ann.scope === 'college-wide' ? '🏫 College-wide' : ann.scope === 'course-specific' ? '📚 Course' : '📅 Semester-specific' %>
+    </span>
+    <span style="font-size:0.72rem;color:#aaa;margin-left:auto;">
+      <%= new Date(ann.createdAt).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }) %>
+    </span>
+  </div>
+
+  <h6 class="fw-bold mb-2" style="font-size:0.97rem;color:#1a1a1a;line-height:1.4;padding-right:24px;">
+    <%= ann.title %>
+  </h6>
+
+  <p style="font-size:0.85rem;color:#555;line-height:1.6;margin-bottom:12px;">
+    <%= ann.content %>
+  </p>
+
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+    <div style="font-size:0.75rem;color:#aaa;">
+      <i class="bi bi-person-fill me-1"></i><%= ann.postedByName %>
+      <% if (ann.views > 0) { %>
+        &nbsp;·&nbsp;<i class="bi bi-eye me-1"></i><%= ann.views %> views
+      <% } %>
+      <% if (ann.expiresAt) { %>
+        &nbsp;·&nbsp;<i class="bi bi-clock me-1"></i>Expires <%= new Date(ann.expiresAt).toLocaleDateString('en-IN', { day:'numeric', month:'short' }) %>
+      <% } %>
+    </div>
+
+    <% if (user.role === 'faculty' || user.role === 'admin') { %>
+      <div class="d-flex gap-2">
+        <button onclick="togglePin('<%= ann._id %>', this)"
+          class="btn btn-sm"
+          style="background:<%= ann.isPinned ? '#fff3e0' : '#f5f5f5' %>;color:<%= ann.isPinned ? '#e65100' : '#999' %>;border:none;border-radius:8px;font-size:0.75rem;font-weight:600;">
+          <i class="bi bi-pin<%= ann.isPinned ? '-fill' : '' %> me-1"></i><%= ann.isPinned ? 'Unpin' : 'Pin' %>
+        </button>
+        <% if (user.role === 'admin' || ann.postedBy && ann.postedBy.toString() === user.id) { %>
+          <form action="/announcements/<%= ann._id %>/delete" method="POST"
+            onsubmit="return confirm('Delete this announcement?')">
+            <button type="submit" class="btn btn-sm"
+              style="background:#fce4ec;color:#c62828;border:none;border-radius:8px;font-size:0.75rem;font-weight:600;">
+              <i class="bi bi-trash me-1"></i>Delete
+            </button>
+          </form>
+        <% } %>
+      </div>
+    <% } %>
+  </div>
+</div>
