@@ -106,6 +106,7 @@ app.use('/auth', require('./routes/auth'));
 app.use('/student', require('./routes/student'));
 app.use('/faculty', require('./routes/faculty'));
 app.use('/notifications', require('./routes/notifications'));
+app.use('/announcements', require('./routes/announcements'));
 
 // ─── Root Redirect ───────────────────────────
 app.get('/', (req, res) => res.redirect('/auth/landing'));
