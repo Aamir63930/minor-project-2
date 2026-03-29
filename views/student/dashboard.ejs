@@ -236,6 +236,37 @@
 
 <%- include('../partials/studentNavbar') %>
 
+<!-- Announcements Banner -->
+<div id="ann-banner-wrap"></div>
+<script>
+  // Load latest urgent/pinned announcement as a banner
+  fetch('/announcements/latest-banner')
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if (!data.announcement) return;
+      var ann = data.announcement;
+      var colors = {
+        Urgent:'#b71c1c', Exam:'#c62828',
+        General:'#003399', Holiday:'#2e7d32',
+        Assignment:'#e65100', Result:'#7b1fa2'
+      };
+      var color = colors[ann.category] || '#003399';
+      document.getElementById('ann-banner-wrap').innerHTML =
+        '<div style="background:' + color + ';color:white;padding:10px 20px;' +
+        'display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">' +
+        '<div style="display:flex;align-items:center;gap:10px;">' +
+        '<i class="bi bi-megaphone-fill" style="font-size:1rem;flex-shrink:0;"></i>' +
+        '<span style="font-size:0.85rem;font-weight:600;">' + ann.title + '</span>' +
+        '<span style="font-size:0.78rem;opacity:0.8;">' + ann.content.substring(0,80) + (ann.content.length>80?'...':'') + '</span>' +
+        '</div>' +
+        '<a href="/announcements" style="color:white;font-size:0.78rem;font-weight:700;' +
+        'background:rgba(255,255,255,0.2);padding:4px 12px;border-radius:6px;text-decoration:none;white-space:nowrap;">' +
+        'View all <i class="bi bi-arrow-right ms-1"></i></a>' +
+        '</div>';
+    })
+    .catch(function(){});
+</script>
+
 <div class="container-fluid px-3 px-md-4 py-4" style="max-width: 1300px; margin: 0 auto;">
 
   <!-- ═══════════════════════════════════════════ -->
