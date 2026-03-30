@@ -1,3 +1,6 @@
+const Syllabus = require('../models/Syllabus');
+const { uploadMaterial, uploadPYQ, uploadSyllabus } = require('../utils/uploadHelper');
+
 const { notifyStudentsForSubject } = require('../utils/notificationHelper');
 
 const express = require('express');
@@ -565,6 +568,144 @@ router.post('/change-password', protect, facultyOnly, async (req, res) => {
   } catch (err) {
     console.error('Password change error:', err);
     return res.redirect('/faculty/change-password?error=Failed to change password. Try again.');
+  }
+});
+
+// ─────────────────────────────────────────────────────
+// GET /faculty/upload/syllabus — Show form
+// ─────────────────────────────────────────────────────
+router.get('/upload/syllabus', protect, facultyOnly, async (req, res) => {
+  try {
+    let subjectOptions = [];
+    if (req.user.role === 'admin') {
+      const allMaps = await SubjectFacultyMap.find({ isActive: true }).lean();
+      const subjectCodes = [...new Set(allMaps.map(m => m.subjectCode))];
+      subjectOptions = await Subject.find({ subjectCode: { $in: subjectCodes } })
+        .sort({ semester: 1, subjectCode: 1 }).lean();
+    } else {
+      const maps = await SubjectFacultyMap.find({
+        facultyId: req.user.id, isActive: true
+      }).lean();
+      const subjectCodes = [...new Set(maps.map(m => m.subjectCode))];
+      subjectOptions = await Subject.find({ subjectCode: { $in: subjectCodes } })
+        .sort({ semester: 1, subjectCode: 1 }).lean();
+    }
+
+    // Get already uploaded syllabi
+    const uploadedSyllabi = await Syllabus.find({
+      subjectCode: { $in: subjectOptions.map(s => s.subjectCode) }
+    }).lean();
+    const uploadedMap = {};
+    uploadedSyllabi.forEach(s => { uploadedMap[s.subjectCode] = s; });
+
+    res.render('faculty/upload-syllabus', {
+      subjectOptions,
+      uploadedMap,
+      user: req.user,
+      success: req.query.success || null,
+      error: req.query.error || null
+    });
+  } catch (err) {
+    console.error('Syllabus form error:', err);
+    res.render('error', { message: 'Failed to load syllabus upload form.', user: req.user });
+  }
+});
+
+// ─────────────────────────────────────────────────────
+// POST /faculty/syllabus/upload
+// ─────────────────────────────────────────────────────
+router.post('/syllabus/upload', protect, facultyOnly,
+  (req, res, next) => {
+    uploadSyllabus.single('file')(req, res, (err) => {
+      if (err) return res.redirect(
+        `/faculty/upload/syllabus?error=${encodeURIComponent(err.message)}`
+      );
+      next();
+    });
+  },
+  async (req, res) => {
+    const { subjectCode, academicYear } = req.body;
+
+    if (!subjectCode) {
+      if (req.file) fs.unlinkSync(req.file.path);
+      return res.redirect('/faculty/upload/syllabus?error=Please select a subject.');
+    }
+    if (!req.file) {
+      return res.redirect('/faculty/upload/syllabus?error=Please select a PDF file.');
+    }
+
+    try {
+      // Auth check
+      if (req.user.role !== 'admin') {
+        const isAllowed = await SubjectFacultyMap.findOne({
+          subjectCode, facultyId: req.user.id, isActive: true
+        });
+        if (!isAllowed) {
+          fs.unlinkSync(req.file.path);
+          return res.redirect(
+            '/faculty/upload/syllabus?error=Not authorized for this subject.'
+          );
+        }
+      }
+
+      const subject = await Subject.findOne({ subjectCode }).lean();
+      if (!subject) {
+        fs.unlinkSync(req.file.path);
+        return res.redirect('/faculty/upload/syllabus?error=Subject not found.');
+      }
+
+      // Delete old file if exists
+      const existing = await Syllabus.findOne({ subjectCode });
+      if (existing) {
+        if (fs.existsSync(existing.fileUrl)) fs.unlinkSync(existing.fileUrl);
+        await Syllabus.findByIdAndDelete(existing._id);
+      }
+
+      await Syllabus.create({
+        subjectCode,
+        subjectName: subject.name,
+        courseCode: subject.courseCode,
+        semester: subject.semester,
+        facultyId: req.user.id,
+        fileUrl: req.file.path.replace(/\\/g, '/'),
+        fileName: req.file.originalname,
+        fileSize: req.file.size,
+        academicYear: academicYear || '2025-26',
+        uploadedAt: new Date(),
+        updatedAt: new Date()
+      });
+
+      return res.redirect(
+        '/faculty/upload/syllabus?success=Syllabus uploaded successfully!'
+      );
+    } catch (err) {
+      console.error('Syllabus upload error:', err);
+      if (req.file) fs.unlinkSync(req.file.path);
+      return res.redirect('/faculty/upload/syllabus?error=Upload failed. Try again.');
+    }
+  }
+);
+
+// ─────────────────────────────────────────────────────
+// POST /faculty/syllabus/delete/:id
+// ─────────────────────────────────────────────────────
+router.post('/syllabus/delete/:id', protect, facultyOnly, async (req, res) => {
+  try {
+    const syllabus = await Syllabus.findById(req.params.id);
+    if (!syllabus) {
+      return res.redirect('/faculty/upload/syllabus?error=Syllabus not found.');
+    }
+    if (req.user.role !== 'admin' &&
+        syllabus.facultyId.toString() !== req.user.id) {
+      return res.redirect(
+        '/faculty/upload/syllabus?error=Not authorized to delete this syllabus.'
+      );
+    }
+    if (fs.existsSync(syllabus.fileUrl)) fs.unlinkSync(syllabus.fileUrl);
+    await Syllabus.findByIdAndDelete(req.params.id);
+    return res.redirect('/faculty/upload/syllabus?success=Syllabus deleted.');
+  } catch (err) {
+    return res.redirect('/faculty/upload/syllabus?error=Failed to delete.');
   }
 });
 
