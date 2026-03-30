@@ -592,13 +592,23 @@
               </div>
 
               <!-- Subject Footer — Action Buttons -->
-              <div class="subject-footer d-flex gap-2">
+              <div class="subject-footer d-flex gap-2 flex-wrap">
+                <a href="/student/subjects/<%= subject.subjectCode %>/syllabus"
+                  class="btn btn-view flex-fill text-center"
+                  style="background:<%= subject.hasSyllabus ? '#e8f5e9' : '#f5f5f5' %>;
+                          color:<%= subject.hasSyllabus ? '#2e7d32' : '#bbb' %>;"
+                  title="<%= subject.hasSyllabus ? 'View Syllabus' : 'Syllabus not uploaded yet' %>">
+                  <i class="bi bi-journal-text me-1"></i>Syllabus
+                  <% if (subject.hasSyllabus) { %>
+                    <i class="bi bi-check-circle-fill ms-1" style="font-size:0.65rem;"></i>
+                  <% } %>
+                </a>
                 <a href="/student/subjects/<%= subject.subjectCode %>/materials"
-                   class="btn btn-view btn-materials flex-fill text-center">
+                  class="btn btn-view btn-materials flex-fill text-center">
                   <i class="bi bi-book me-1"></i>Materials
                 </a>
                 <a href="/student/subjects/<%= subject.subjectCode %>/pyqs"
-                   class="btn btn-view btn-pyq flex-fill text-center <%= !subject.hasPYQ ? 'disabled' : '' %>">
+                  class="btn btn-view btn-pyq flex-fill text-center <%= !subject.hasPYQ ? 'disabled' : '' %>">
                   <i class="bi bi-file-earmark-pdf me-1"></i>PYQs
                 </a>
               </div>
@@ -670,13 +680,23 @@
                 </div>
               </div>
 
-              <div class="subject-footer d-flex gap-2">
+              <div class="subject-footer d-flex gap-2 flex-wrap">
+                <a href="/student/subjects/<%= subject.subjectCode %>/syllabus"
+                  class="btn btn-view flex-fill text-center"
+                  style="background:<%= subject.hasSyllabus ? '#e8f5e9' : '#f5f5f5' %>;
+                          color:<%= subject.hasSyllabus ? '#2e7d32' : '#bbb' %>;"
+                  title="<%= subject.hasSyllabus ? 'View Syllabus' : 'Syllabus not uploaded yet' %>">
+                  <i class="bi bi-journal-text me-1"></i>Syllabus
+                  <% if (subject.hasSyllabus) { %>
+                    <i class="bi bi-check-circle-fill ms-1" style="font-size:0.65rem;"></i>
+                  <% } %>
+                </a>
                 <a href="/student/subjects/<%= subject.subjectCode %>/materials"
-                   class="btn btn-view btn-materials flex-fill text-center">
-                  <i class="bi bi-file-earmark-text me-1"></i>Lab Sheets
+                  class="btn btn-view btn-materials flex-fill text-center">
+                  <i class="bi bi-book me-1"></i>Materials
                 </a>
                 <a href="/student/subjects/<%= subject.subjectCode %>/pyqs"
-                   class="btn btn-view btn-pyq flex-fill text-center <%= !subject.hasPYQ ? 'disabled' : '' %>">
+                  class="btn btn-view btn-pyq flex-fill text-center <%= !subject.hasPYQ ? 'disabled' : '' %>">
                   <i class="bi bi-file-earmark-pdf me-1"></i>PYQs
                 </a>
               </div>
