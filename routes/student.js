@@ -1,3 +1,4 @@
+const Syllabus = require('../models/Syllabus');
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/auth');
@@ -234,6 +235,48 @@ router.get('/subjects/:subjectCode/pyqs', protect, studentOnly, async (req, res)
   } catch (err) {
     console.error('PYQ error:', err);
     res.render('error', { message: 'Failed to load previous year papers.', user: req.user });
+  }
+});
+
+// ─────────────────────────────────────────────────────
+// GET /student/subjects/:subjectCode/syllabus
+// ─────────────────────────────────────────────────────
+router.get('/subjects/:subjectCode/syllabus', protect, studentOnly, async (req, res) => {
+  try {
+    const { subjectCode } = req.params;
+    const student = await Student.findById(req.user.id).lean();
+    const currentSemester = getCurrentSemester(student.enrollmentYear);
+
+    const subject = await Subject.findOne({
+      subjectCode,
+      $or: [
+        { courseCode: student.courseCode, semester: currentSemester },
+        { courseCode: 'COMMON', semester: currentSemester }
+      ]
+    }).lean();
+
+    if (!subject) {
+      return res.render('error', {
+        message: 'Subject not found or not accessible.',
+        user: req.user
+      });
+    }
+
+    const syllabus = await Syllabus.findOne({ subjectCode })
+      .populate('facultyId', 'name designation')
+      .lean();
+
+    res.render('student/syllabus', {
+      subject,
+      syllabus,
+      student,
+      currentSemester,
+      semesterLabel: getSemesterLabel(currentSemester),
+      user: req.user
+    });
+  } catch (err) {
+    console.error('Syllabus view error:', err);
+    res.render('error', { message: 'Failed to load syllabus.', user: req.user });
   }
 });
 
