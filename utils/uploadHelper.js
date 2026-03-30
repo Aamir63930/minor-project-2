@@ -64,4 +64,26 @@ const uploadPYQ = multer({
   limits: { fileSize: 20 * 1024 * 1024 } // 20MB
 });
 
-module.exports = { uploadMaterial, uploadPYQ };
+// Storage for syllabus
+const syllabusStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const dir = 'uploads/syllabus';
+    ensureDir(dir);
+    cb(null, dir);
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    // Use subject code in filename for easy identification
+    const subjectCode = req.body.subjectCode || 'SYLLABUS';
+    const uniqueName = `SYL_${subjectCode}_${uuidv4()}${ext}`;
+    cb(null, uniqueName);
+  }
+});
+
+const uploadSyllabus = multer({
+  storage: syllabusStorage,
+  fileFilter: pdfFilter,
+  limits: { fileSize: 20 * 1024 * 1024 }
+});
+
+module.exports = { uploadMaterial, uploadPYQ, uploadSyllabus };
