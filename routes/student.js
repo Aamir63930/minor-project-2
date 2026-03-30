@@ -75,6 +75,11 @@ router.get('/dashboard', protect, studentOnly, async (req, res) => {
           { $sort: { _id: 1 } }
         ]);
 
+        // Check syllabus availability
+        const syllabusDoc = await Syllabus.findOne({
+          subjectCode: subject.subjectCode
+        }).lean();
+
         return {
           ...subject,
           theoryFaculty: theoryFaculty?.facultyId || null,
@@ -82,6 +87,7 @@ router.get('/dashboard', protect, studentOnly, async (req, res) => {
           materialCount,
           pyqCount,
           hasPYQ: pyqCount > 0,
+          hasSyllabus: !!syllabusDoc,
           unitCounts,
           totalUnits: 6
         };
