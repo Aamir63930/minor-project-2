@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upload Syllabus — SOET Portal</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+  <link href="/css/main.css" rel="stylesheet">
+  <style>
+    :root { --blue:#003399; --green:#2e7d32; }
+    body { background:#f0f4ff; font-family:'Segoe UI',sans-serif; }
+    .upload-card {
+      background:white; border-radius:20px; padding:32px;
+      box-shadow:0 4px 20px rgba(0,0,0,0.08);
+      max-width:700px; margin:0 auto;
+    }
+    .form-label { font-weight:600; font-size:0.85rem; color:#555; }
+    .form-control, .form-select {
+      border-radius:10px; border-color:#e0e7ff;
+      padding:10px 14px; font-size:0.9rem;
+    }
+    .form-control:focus, .form-select:focus {
+      border-color:var(--blue);
+      box-shadow:0 0 0 3px rgba(0,51,153,0.12);
+    }
+    .btn-submit {
+      background:linear-gradient(135deg,#2e7d32,#43a047);
+      color:white; border:none; border-radius:12px;
+      padding:13px 30px; font-weight:700;
+      font-size:1rem; width:100%; cursor:pointer;
+    }
+    .btn-submit:hover { background:linear-gradient(135deg,#1b5e20,#2e7d32); }
+    .drop-zone {
+      border:2px dashed #a5d6a7; border-radius:14px;
+      padding:36px 20px; text-align:center;
+      cursor:pointer; transition:all 0.2s; background:#f1f8e9;
+    }
+    .drop-zone:hover { border-color:var(--green); background:#e8f5e9; }
+    .drop-zone.has-file { border-color:var(--green); background:#e8f5e9; }
+    .existing-card {
+      background:#e8f5e9; border-radius:12px;
+      padding:14px 18px; border:1px solid #c8e6c9;
+      display:flex; align-items:center; gap:14px;
+      margin-bottom:16px;
+    }
+    .alert-msg {
+      padding:10px 16px; border-radius:10px;
+      margin-bottom:16px; font-size:0.88rem;
+    }
+    .alert-success-msg { background:#e8f5e9; color:#2e7d32; }
+    .alert-error-msg { background:#fce4ec; color:#c62828; }
+  </style>
+</head>
+<body data-authenticated="true">
+
+<%- include('../partials/facultyNavbar') %>
+
+<div class="container-fluid px-3 px-md-4 py-4">
+  <div class="upload-card">
+
+    <div class="d-flex align-items-center gap-3 mb-4">
+      <div style="width:52px;height:52px;background:#e8f5e9;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;color:#2e7d32;">
+        <i class="bi bi-journal-text"></i>
+      </div>
+      <div>
+        <h4 class="fw-bold mb-0">Upload Syllabus</h4>
+        <div class="text-muted" style="font-size:0.83rem;">
+          One syllabus per subject · PDF only · Replaces existing
+        </div>
+      </div>
+    </div>
+
+    <% if (success) { %>
+      <div class="alert-msg alert-success-msg">
+        <i class="bi bi-check-circle-fill me-2"></i><%= success %>
+      </div>
+    <% } %>
+    <% if (error) { %>
+      <div class="alert-msg alert-error-msg">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i><%= error %>
+      </div>
+    <% } %>
+
+    <div id="jsAlert" class="alert-msg" style="display:none;"></div>
+
+    <form action="/faculty/syllabus/upload" method="POST"
+      enctype="multipart/form-data" id="syllabusForm">
+
+      <!-- Subject -->
+      <div class="mb-4">
+        <label class="form-label">Subject <span class="text-danger">*</span></label>
+        <select name="subjectCode" id="subjectSelect"
+          class="form-select" required onchange="checkExisting(this.value)">
+          <option value="">— Select Subject —</option>
+          <% subjectOptions.forEach(s => { %>
+            <option value="<%= s.subjectCode %>">
+              [Sem <%= s.semester %>] <%= s.subjectCode %> — <%= s.name %>
+              <%= uploadedMap[s.subjectCode] ? '✓ Syllabus uploaded' : '' %>
+            </option>
+          <% }); %>
+        </select>
+      </div>
+
+      <!-- Existing syllabus warning -->
+      <div id="existingWarn" style="display:none;" class="mb-3">
+        <div style="background:#fff3e0;border-radius:10px;padding:12px 16px;border:1px solid #ffe082;font-size:0.85rem;color:#e65100;">
+          <i class="bi bi-exclamation-triangle-fill me-2"></i>
+          <strong>A syllabus already exists for this subject.</strong>
+          Uploading a new one will replace the existing file.
+        </div>
+      </div>
+
+      <!-- Academic Year -->
+      <div class="mb-4">
+        <label class="form-label">Academic Year</label>
+        <select name="academicYear" class="form-select">
+          <option value="2025-26" selected>2025-26</option>
+          <option value="2024-25">2024-25</option>
+          <option value="2026-27">2026-27</option>
+        </select>
+      </div>
+
+      <!-- File Upload -->
+      <div class="mb-4">
+        <label class="form-label">Syllabus PDF <span class="text-danger">*</span></label>
+        <div class="drop-zone" id="dropZone"
+          onclick="document.getElementById('fileInput').click()">
+          <i class="bi bi-journal-text fs-1 mb-2 d-block"
+            style="color:#a5d6a7;" id="dropIcon"></i>
+          <div class="fw-semibold" style="color:#666;" id="dropText">
+            Click to browse or drag & drop syllabus PDF
+          </div>
+          <div style="color:#aaa;font-size:0.78rem;margin-top:4px;" id="dropSub">
+            Maximum 20MB · PDF only
+          </div>
+        </div>
+        <input type="file" name="file" id="fileInput"
+          accept=".pdf,application/pdf" class="d-none"
+          onchange="handleFileSelect(this)">
+        <div id="fileMsg" style="font-size:0.78rem;margin-top:6px;"></div>
+      </div>
+
+      <button type="button" class="btn-submit" onclick="submitSyllabus()">
+        <i class="bi bi-cloud-upload me-2"></i>Upload Syllabus
+      </button>
+
+    </form>
+
+    <!-- Already Uploaded Syllabi List -->
+    <% if (Object.keys(uploadedMap).length > 0) { %>
+      <hr style="margin:28px 0;border-color:#e0e7ff;">
+      <h6 class="fw-bold mb-3" style="color:#555;">
+        <i class="bi bi-journal-check me-2" style="color:#2e7d32;"></i>
+        Already Uploaded Syllabi
+      </h6>
+      <% Object.values(uploadedMap).forEach(syl => { %>
+        <div class="existing-card">
+          <div style="width:40px;height:40px;background:#c8e6c9;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i class="bi bi-file-earmark-pdf-fill" style="color:#2e7d32;"></i>
+          </div>
+          <div style="flex-grow:1;min-width:0;">
+            <div style="font-weight:700;font-size:0.88rem;color:#1a1a1a;">
+              <%= syl.subjectCode %> — <%= syl.subjectName %>
+            </div>
+            <div style="font-size:0.75rem;color:#666;">
+              <%= syl.academicYear %> ·
+              <%= new Date(syl.uploadedAt).toLocaleDateString('en-IN', {day:'numeric',month:'short',year:'numeric'}) %>
+              <% if (syl.fileSize) { %>
+                · <%= (syl.fileSize / 1024 / 1024).toFixed(1) %> MB
+              <% } %>
+            </div>
+          </div>
+          <div class="d-flex gap-2">
+            <a href="/<%= syl.fileUrl %>" target="_blank"
+              class="btn btn-sm"
+              style="background:#eef2ff;color:#003399;border:none;border-radius:8px;font-size:0.75rem;font-weight:600;">
+              <i class="bi bi-eye"></i>
+            </a>
+            <form action="/faculty/syllabus/delete/<%= syl._id %>" method="POST"
+              onsubmit="return confirm('Delete this syllabus?')">
+              <button type="submit" class="btn btn-sm"
+                style="background:#fce4ec;color:#c62828;border:none;border-radius:8px;font-size:0.75rem;">
+                <i class="bi bi-trash"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      <% }); %>
+    <% } %>
+
+    <div class="mt-4 text-center">
+      <a href="/faculty/dashboard" class="text-muted" style="font-size:0.85rem;">
+        <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+      </a>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/main.js"></script>
+<script>
+  var uploadedSubjects = <%- JSON.stringify(Object.keys(uploadedMap)) %>;
+
+  $(document).ready(function() {
+    $('#subjectSelect').select2({
+      placeholder: '— Search or select subject —',
+      allowClear: true, width: '100%'
+    });
+    var urlParams = new URLSearchParams(window.location.search);
+    var subjectParam = urlParams.get('subject');
+    if (subjectParam) {
+      $('#subjectSelect').val(subjectParam).trigger('change');
+      checkExisting(subjectParam);
+    }
+  });
+
+  function checkExisting(code) {
+    var warn = document.getElementById('existingWarn');
+    warn.style.display = uploadedSubjects.includes(code) ? 'block' : 'none';
+  }
+
+  function handleFileSelect(input) {
+    var file = input.files[0];
+    if (!file) return;
+    var msgEl = document.getElementById('fileMsg');
+    if (file.type !== 'application/pdf') {
+      msgEl.textContent = 'Only PDF files are allowed.';
+      msgEl.style.color = '#c62828';
+      input.value = '';
+      return;
+    }
+    if (file.size > 20 * 1024 * 1024) {
+      msgEl.textContent = 'File too large. Max 20MB.';
+      msgEl.style.color = '#c62828';
+      input.value = '';
+      return;
+    }
+    document.getElementById('dropZone').classList.add('has-file');
+    document.getElementById('dropIcon').className =
+      'bi bi-file-earmark-check fs-1 mb-2 d-block';
+    document.getElementById('dropIcon').style.color = '#2e7d32';
+    document.getElementById('dropText').textContent = file.name;
+    document.getElementById('dropSub').textContent =
+      (file.size / 1024 / 1024).toFixed(2) + ' MB · PDF';
+    msgEl.textContent = 'File ready to upload.';
+    msgEl.style.color = '#2e7d32';
+  }
+
+  var dz = document.getElementById('dropZone');
+  dz.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    dz.style.borderColor = '#2e7d32';
+  });
+  dz.addEventListener('dragleave', function() {
+    dz.style.borderColor = '#a5d6a7';
+  });
+  dz.addEventListener('drop', function(e) {
+    e.preventDefault();
+    dz.style.borderColor = '#a5d6a7';
+    var file = e.dataTransfer.files[0];
+    if (file) {
+      var input = document.getElementById('fileInput');
+      var dt = new DataTransfer();
+      dt.items.add(file);
+      input.files = dt.files;
+      handleFileSelect(input);
+    }
+  });
+
+  function showAlert(msg, type) {
+    var el = document.getElementById('jsAlert');
+    el.textContent = msg;
+    el.style.display = 'block';
+    el.className = 'alert-msg ' +
+      (type === 'error' ? 'alert-error-msg' : 'alert-success-msg');
+  }
+
+  function submitSyllabus() {
+    var subject = $('#subjectSelect').val();
+    var file = document.getElementById('fileInput').files[0];
+    if (!subject) { showAlert('Please select a subject.', 'error'); return; }
+    if (!file) { showAlert('Please select a PDF file.', 'error'); return; }
+    document.getElementById('syllabusForm').submit();
+  }
+</script>
+</body>
+</html>
