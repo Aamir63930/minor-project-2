@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= subject.name %> — Syllabus</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="/css/main.css" rel="stylesheet">
+  <style>
+    body { background:#f0f4ff; font-family:'Segoe UI',sans-serif; }
+    .back-btn {
+      background:white; color:#003399;
+      border:2px solid #e0e7ff; border-radius:10px;
+      padding:8px 18px; font-weight:600;
+      font-size:0.85rem; text-decoration:none;
+      display:inline-flex; align-items:center;
+      gap:6px; transition:all 0.2s; margin-bottom:20px;
+    }
+    .back-btn:hover {
+      background:#003399; color:white;
+      border-color:#003399;
+    }
+    .subject-hero {
+      background:linear-gradient(135deg,#2e7d32,#43a047);
+      border-radius:16px; color:white;
+      padding:24px 28px; margin-bottom:24px;
+    }
+    .pdf-container {
+      background:white; border-radius:16px;
+      border:0.5px solid #e0e7ff;
+      box-shadow:0 2px 12px rgba(0,0,0,0.06);
+      overflow:hidden;
+    }
+    .pdf-toolbar {
+      background:#1a1a2e; padding:12px 20px;
+      display:flex; align-items:center;
+      justify-content:space-between; flex-wrap:wrap; gap:10px;
+    }
+    .pdf-viewer {
+      width:100%;
+      height:80vh;
+      min-height:600px;
+      border:none;
+      display:block;
+    }
+    .no-syllabus {
+      text-align:center; padding:60px 20px;
+      background:white; border-radius:16px;
+      border:2px dashed #e0e7ff; color:#bbb;
+    }
+    .info-chip {
+      background:rgba(255,255,255,0.15);
+      border-radius:8px; padding:6px 12px;
+      font-size:0.75rem; display:inline-flex;
+      align-items:center; gap:6px;
+    }
+  </style>
+</head>
+<body data-authenticated="true">
+
+<%- include('../partials/studentNavbar') %>
+
+<div class="container-fluid px-3 px-md-4 py-4"
+  style="max-width:1100px;margin:0 auto;">
+
+  <a href="/student/dashboard" class="back-btn">
+    <i class="bi bi-arrow-left"></i>Back to Dashboard
+  </a>
+
+  <!-- Subject Hero -->
+  <div class="subject-hero">
+    <div class="d-flex align-items-start justify-content-between flex-wrap gap-3">
+      <div>
+        <span style="background:rgba(255,255,255,0.2);padding:3px 12px;border-radius:20px;font-size:0.75rem;font-weight:700;">
+          <%= subject.subjectCode %>
+        </span>
+        <h3 class="fw-bold mt-2 mb-2"><%= subject.name %></h3>
+        <div class="d-flex flex-wrap gap-2">
+          <span class="info-chip">
+            <i class="bi bi-calendar3"></i><%= semesterLabel %>
+          </span>
+          <span class="info-chip">
+            <i class="bi bi-star-fill" style="color:#FFB800;"></i>
+            <%= subject.credits %> Credits
+          </span>
+          <span class="info-chip">
+            <i class="bi bi-book"></i><%= subject.type %>
+          </span>
+          <% if (syllabus) { %>
+            <span class="info-chip">
+              <i class="bi bi-calendar-check"></i>
+              Academic Year <%= syllabus.academicYear %>
+            </span>
+          <% } %>
+        </div>
+      </div>
+      <% if (syllabus) { %>
+        <a href="/<%= syllabus.fileUrl %>" target="_blank" download
+          style="background:rgba(255,255,255,0.2);color:white;border:2px solid rgba(255,255,255,0.4);border-radius:12px;padding:10px 20px;font-weight:700;font-size:0.88rem;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:all 0.2s;">
+          <i class="bi bi-download"></i>Download PDF
+        </a>
+      <% } %>
+    </div>
+  </div>
+
+  <% if (!syllabus) { %>
+    <div class="no-syllabus">
+      <i class="bi bi-journal-x" style="font-size:3rem;display:block;margin-bottom:16px;"></i>
+      <h5 style="color:#999;">Syllabus not uploaded yet</h5>
+      <p style="font-size:0.85rem;color:#bbb;margin:0;">
+        The faculty hasn't uploaded the syllabus for this subject yet.
+        Check back later or contact your faculty directly.
+      </p>
+    </div>
+  <% } else { %>
+
+    <!-- Upload info bar -->
+    <div style="background:white;border-radius:12px;padding:12px 20px;margin-bottom:16px;border:0.5px solid #e0e7ff;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+      <div style="font-size:0.82rem;color:#555;">
+        <i class="bi bi-person-fill me-1" style="color:#003399;"></i>
+        <% if (syllabus.facultyId) { %>
+          Uploaded by <strong><%= syllabus.facultyId.name %></strong>
+          (<%= syllabus.facultyId.designation %>)
+        <% } else { %>
+          Uploaded by Faculty
+        <% } %>
+      </div>
+      <div style="font-size:0.78rem;color:#aaa;">
+        <i class="bi bi-clock me-1"></i>
+        Last updated:
+        <%= new Date(syllabus.uploadedAt).toLocaleDateString('en-IN', {day:'numeric',month:'long',year:'numeric'}) %>
+        <% if (syllabus.fileSize) { %>
+          &nbsp;·&nbsp;
+          <%= (syllabus.fileSize / 1024 / 1024).toFixed(1) %> MB
+        <% } %>
+      </div>
+    </div>
+
+    <!-- PDF Viewer -->
+    <div class="pdf-container">
+      <div class="pdf-toolbar">
+        <div style="color:white;font-size:0.85rem;font-weight:600;">
+          <i class="bi bi-journal-text me-2" style="color:#4caf50;"></i>
+          <%= subject.name %> — Syllabus
+        </div>
+        <div class="d-flex gap-2">
+          <a href="/<%= syllabus.fileUrl %>" target="_blank"
+            style="background:rgba(255,255,255,0.1);color:white;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:6px 14px;font-size:0.78rem;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:6px;">
+            <i class="bi bi-box-arrow-up-right"></i>Open in new tab
+          </a>
+          <a href="/<%= syllabus.fileUrl %>" download
+            style="background:#4caf50;color:white;border:none;border-radius:8px;padding:6px 14px;font-size:0.78rem;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:6px;">
+            <i class="bi bi-download"></i>Download
+          </a>
+        </div>
+      </div>
+
+      <!-- PDF embedded viewer -->
+      <iframe
+        src="/<%= syllabus.fileUrl %>#toolbar=1&navpanes=1&scrollbar=1&view=FitH"
+        class="pdf-viewer"
+        title="<%= subject.name %> Syllabus">
+        <div style="padding:40px;text-align:center;color:#666;">
+          <p>Your browser doesn't support inline PDF viewing.</p>
+          <a href="/<%= syllabus.fileUrl %>" target="_blank"
+            style="color:#003399;font-weight:600;">
+            Click here to open the syllabus PDF
+          </a>
+        </div>
+      </iframe>
+    </div>
+
+  <% } %>
+
+  <div class="text-center text-muted py-3 mt-3" style="font-size:0.75rem;">
+    SOET Resource Portal &copy; <%= new Date().getFullYear() %> · KR Mangalam University
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/main.js"></script>
+</body>
+</html>
