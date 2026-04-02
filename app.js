@@ -37,13 +37,19 @@ app.use(helmet({
         "https://cdn.jsdelivr.net",
         "https://fonts.gstatic.com"
       ],
-      imgSrc: ["'self'", "data:", "https:"],
+      imgSrc: ["'self'", "data:", "https:", "blob:"],
       connectSrc: [
         "'self'",
         "https://login.microsoftonline.com",
-        "https://graph.microsoft.com"
+        "https://graph.microsoft.com",
+        "https://cdn.jsdelivr.net"
       ],
-      frameSrc: ["'none'"],
+      frameSrc: [
+        "'self'"
+      ],
+      frameAncestors: ["'self'"],
+      objectSrc: ["'self'"],
+      workerSrc: ["'self'", "blob:"],
     }
   },
   crossOriginEmbedderPolicy: false,

@@ -15,7 +15,6 @@ const StudyMaterial = require('../models/StudyMaterial');
 const PYQ = require('../models/PYQ');
 const Student = require('../models/Student');
 const Course = require('../models/Course');
-const { uploadMaterial, uploadPYQ } = require('../utils/uploadHelper');
 const fs = require('fs');
 
 // ─────────────────────────────────────────────────────
