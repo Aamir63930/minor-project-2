@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Saved Resources — SOET Portal</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="/css/main.css" rel="stylesheet">
+  <style>
+    body { background:#f0f4ff; font-family:'Segoe UI',sans-serif; }
+    .page-header {
+      background:linear-gradient(135deg,#003399,#0055cc);
+      border-radius:20px; color:white;
+      padding:28px 32px; margin-bottom:24px;
+    }
+    .stat-pill {
+      background:rgba(255,255,255,0.15);
+      border-radius:20px; padding:6px 16px;
+      font-size:0.82rem; font-weight:600;
+      display:inline-flex; align-items:center; gap:6px;
+    }
+    .filter-btn {
+      padding:6px 16px; border-radius:20px;
+      font-size:0.82rem; font-weight:600;
+      border:1.5px solid #e0e7ff;
+      background:white; color:#666;
+      cursor:pointer; transition:all 0.15s;
+      text-decoration:none; display:inline-block;
+    }
+    .filter-btn.active,
+    .filter-btn:hover {
+      background:#003399;
+      color:white;
+      border-color:#003399;
+    }
+    .subject-group {
+      background:white; border-radius:16px;
+      border:0.5px solid #e0e7ff;
+      overflow:hidden; margin-bottom:16px;
+      box-shadow:0 2px 10px rgba(0,0,0,0.04);
+    }
+    .group-header {
+      background:#f8f9ff; padding:14px 20px;
+      border-bottom:0.5px solid #e0e7ff;
+      display:flex; align-items:center; gap:10px;
+    }
+    .group-code {
+      background:#eef2ff; color:#003399;
+      font-size:0.72rem; font-weight:700;
+      padding:3px 10px; border-radius:6px;
+    }
+    .bookmark-item {
+      padding:14px 20px;
+      border-bottom:0.5px solid #f5f5f5;
+      display:flex; align-items:center; gap:14px;
+      transition:background 0.15s;
+    }
+    .bookmark-item:last-child { border-bottom:none; }
+    .bookmark-item:hover { background:#fafcff; }
+    .item-icon {
+      width:42px; height:42px; border-radius:10px;
+      display:flex; align-items:center;
+      justify-content:center; font-size:1.1rem;
+      flex-shrink:0;
+    }
+    .type-mat { background:#e8f5e9; color:#2e7d32; }
+    .type-pyq { background:#f3e5f5; color:#7b1fa2; }
+    .btn-action {
+      font-size:0.75rem; font-weight:600;
+      padding:6px 12px; border-radius:8px;
+      border:none; cursor:pointer;
+      text-decoration:none; display:inline-flex;
+      align-items:center; gap:5px;
+      transition:all 0.15s; white-space:nowrap;
+      flex-shrink:0;
+    }
+    .btn-open {
+      background:#eef2ff; color:#003399;
+    }
+    .btn-open:hover { background:#003399; color:white; }
+    .btn-remove {
+      background:#fce4ec; color:#c62828;
+    }
+    .btn-remove:hover { background:#c62828; color:white; }
+    .empty-state {
+      text-align:center; padding:60px 20px;
+      background:white; border-radius:16px;
+      border:2px dashed #e0e7ff; color:#bbb;
+    }
+    .unit-tag {
+      background:#eef2ff; color:#003399;
+      font-size:0.7rem; font-weight:600;
+      padding:2px 8px; border-radius:6px;
+    }
+    .pyq-tag {
+      font-size:0.7rem; font-weight:600;
+      padding:2px 8px; border-radius:6px;
+    }
+    .pyq-mid { background:#fff3e0; color:#e65100; }
+    .pyq-end { background:#fce4ec; color:#c62828; }
+  </style>
+</head>
+<body data-authenticated="true">
+
+<%- include('../partials/studentNavbar') %>
+
+<div class="container-fluid px-3 px-md-4 py-4"
+  style="max-width:900px; margin:0 auto;">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="d-flex align-items-center
+      justify-content-between flex-wrap gap-3">
+      <div>
+        <h4 class="fw-bold mb-2">
+          <i class="bi bi-bookmark-heart-fill me-2"
+            style="color:#FFB800;"></i>Saved Resources
+        </h4>
+        <div class="d-flex gap-2 flex-wrap">
+          <span class="stat-pill">
+            <i class="bi bi-bookmark-fill"></i>
+            <%= totalCount %> saved
+          </span>
+          <span class="stat-pill">
+            <i class="bi bi-file-earmark-text-fill"></i>
+            <%= materialCount %> materials
+          </span>
+          <span class="stat-pill">
+            <i class="bi bi-file-earmark-pdf-fill"></i>
+            <%= pyqCount %> PYQs
+          </span>
+        </div>
+      </div>
+      <% if (totalCount > 0) { %>
+        <button onclick="clearAllBookmarks()"
+          style="background:rgba(255,255,255,0.15);color:white;border:1.5px solid rgba(255,255,255,0.3);border-radius:10px;padding:8px 16px;font-size:0.82rem;font-weight:600;cursor:pointer;">
+          <i class="bi bi-trash me-1"></i>Clear all
+        </button>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="d-flex gap-2 flex-wrap mb-4">
+    <a href="/bookmarks"
+      class="filter-btn <%= filter==='all'?'active':'' %>">
+      All (<%= totalCount %>)
+    </a>
+    <a href="/bookmarks?filter=material"
+      class="filter-btn <%= filter==='material'?'active':'' %>">
+      <i class="bi bi-file-earmark-text me-1"></i>
+      Materials (<%= materialCount %>)
+    </a>
+    <a href="/bookmarks?filter=pyq"
+      class="filter-btn <%= filter==='pyq'?'active':'' %>">
+      <i class="bi bi-file-earmark-pdf me-1"></i>
+      PYQs (<%= pyqCount %>)
+    </a>
+  </div>
+
+  <!-- Bookmark List -->
+  <% if (grouped.length === 0) { %>
+    <div class="empty-state">
+      <i class="bi bi-bookmark"
+        style="font-size:3rem;display:block;margin-bottom:16px;"></i>
+      <h5 style="color:#999;">No saved resources yet</h5>
+      <p style="font-size:0.85rem;color:#bbb;margin:0 0 16px;">
+        Tap the bookmark icon on any study material or PYQ to save it here.
+      </p>
+      <a href="/student/dashboard"
+        style="background:#003399;color:white;padding:10px 24px;border-radius:10px;text-decoration:none;font-weight:600;font-size:0.88rem;">
+        <i class="bi bi-arrow-left me-1"></i>Go to Dashboard
+      </a>
+    </div>
+  <% } else { %>
+    <% grouped.forEach(function(group) { %>
+      <div class="subject-group">
+
+        <!-- Group Header -->
+        <div class="group-header">
+          <span class="group-code"><%= group.subjectCode %></span>
+          <span style="font-size:0.88rem;font-weight:600;color:#1a1a1a;flex-grow:1;">
+            <%= group.subjectName %>
+          </span>
+          <span style="font-size:0.75rem;color:#aaa;">
+            <%= group.items.length %> saved
+          </span>
+        </div>
+
+        <!-- Items -->
+        <% group.items.forEach(function(item) { %>
+          <div class="bookmark-item" id="bm-<%= item._id %>">
+
+            <!-- Icon -->
+            <div class="item-icon
+              <%= item.itemType === 'material' ? 'type-mat' : 'type-pyq' %>">
+              <i class="bi
+                <%= item.itemType === 'material'
+                  ? 'bi-file-earmark-text-fill'
+                  : 'bi-file-earmark-pdf-fill' %>">
+              </i>
+            </div>
+
+            <!-- Info -->
+            <div style="flex-grow:1;min-width:0;">
+              <div style="font-size:0.88rem;font-weight:600;
+                color:#1a1a1a;margin-bottom:4px;
+                white-space:nowrap;overflow:hidden;
+                text-overflow:ellipsis;">
+                <%= item.title %>
+              </div>
+              <div class="d-flex align-items-center gap-2 flex-wrap">
+                <% if (item.itemType === 'material' && item.unit) { %>
+                  <span class="unit-tag">Unit <%= item.unit %></span>
+                <% } %>
+                <% if (item.itemType === 'pyq') { %>
+                  <span class="pyq-tag
+                    <%= item.examType === 'MidTerm' ? 'pyq-mid' : 'pyq-end' %>">
+                    <%= item.examType === 'MidTerm' ? 'Mid-Term' : 'End-Term' %>
+                  </span>
+                  <% if (item.year) { %>
+                    <span style="background:#f0f4ff;color:#003399;font-size:0.7rem;font-weight:700;padding:2px 8px;border-radius:6px;">
+                      <%= item.year %>
+                    </span>
+                  <% } %>
+                <% } %>
+                <span style="font-size:0.72rem;color:#aaa;">
+                  <i class="bi bi-clock me-1"></i>
+                  Saved <%= new Date(item.createdAt).toLocaleDateString('en-IN',
+                    {day:'numeric',month:'short',year:'numeric'}) %>
+                </span>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="d-flex gap-2">
+              <a href="/<%= item.fileUrl %>"
+                target="_blank" class="btn-action btn-open">
+                <i class="bi bi-download"></i>
+                <span class="d-none d-md-inline">Open</span>
+              </a>
+              <button class="btn-action btn-remove"
+                onclick="removeBookmark('<%= item._id %>',
+                  '<%= item.itemId %>')">
+                <i class="bi bi-bookmark-x-fill"></i>
+                <span class="d-none d-md-inline">Remove</span>
+              </button>
+            </div>
+
+          </div>
+        <% }); %>
+
+      </div>
+    <% }); %>
+  <% } %>
+
+  <div class="text-center text-muted py-3 mt-2"
+    style="font-size:0.75rem;border-top:1px solid #e0e7ff;">
+    SOET Resource Portal &copy; <%= new Date().getFullYear() %>
+    · KR Mangalam University
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/main.js"></script>
+<script>
+  async function removeBookmark(bookmarkId, itemId) {
+    try {
+      const res = await fetch('/bookmarks/toggle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ itemId, itemType: 'any' })
+      });
+      const data = await res.json();
+      if (data.success) {
+        var el = document.getElementById('bm-' + bookmarkId);
+        if (el) {
+          el.style.transition = 'all 0.3s';
+          el.style.opacity = '0';
+          el.style.height = '0';
+          el.style.padding = '0';
+          setTimeout(function() {
+            el.remove();
+            // Check if group is empty
+            var groups = document.querySelectorAll('.subject-group');
+            groups.forEach(function(g) {
+              var items = g.querySelectorAll('.bookmark-item');
+              if (items.length === 0) g.remove();
+            });
+          }, 300);
+        }
+      }
+    } catch(e) {
+      alert('Failed to remove bookmark.');
+    }
+  }
+
+  async function clearAllBookmarks() {
+    if (!confirm('Remove all saved resources? This cannot be undone.')) return;
+    try {
+      const res = await fetch('/bookmarks/remove-all', { method: 'POST' });
+      const data = await res.json();
+      if (data.success) window.location.reload();
+    } catch(e) {
+      alert('Failed to clear bookmarks.');
+    }
+  }
+</script>
+</body>
+</html>
