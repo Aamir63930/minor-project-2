@@ -113,6 +113,7 @@ app.use('/student', require('./routes/student'));
 app.use('/faculty', require('./routes/faculty'));
 app.use('/notifications', require('./routes/notifications'));
 app.use('/announcements', require('./routes/announcements'));
+app.use('/bookmarks', require('./routes/bookmarks'));
 
 // ─── Root Redirect ───────────────────────────
 app.get('/', (req, res) => res.redirect('/auth/landing'));
