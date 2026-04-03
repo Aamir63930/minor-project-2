@@ -1,3 +1,4 @@
+const Bookmark = require('../models/Bookmark');
 const Syllabus = require('../models/Syllabus');
 const express = require('express');
 const router = express.Router();
@@ -105,6 +106,11 @@ router.get('/dashboard', protect, studentOnly, async (req, res) => {
     const batchYear = student.enrollmentYear;
     const graduationYear = batchYear + 4;
 
+    // Bookmark count for this student
+    const bookmarkCount = await Bookmark.countDocuments({
+      studentId: student._id
+    });    
+
     res.render('student/dashboard', {
       student,
       currentSemester,
@@ -114,6 +120,7 @@ router.get('/dashboard', protect, studentOnly, async (req, res) => {
       subjects: subjectsWithDetails,
       batchYear,
       graduationYear,
+      bookmarkCount,
       user: req.user
     });
 
