@@ -196,5 +196,46 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="/js/main.js"></script>
+
+<script>
+  fetch('/bookmarks/ids')
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      var ids = data.ids || [];
+      ids.forEach(function(id) {
+        var btn = document.getElementById('bm-' + id);
+        if (btn) {
+          btn.style.background = '#f3e5f5';
+          btn.style.color = '#7b1fa2';
+          btn.querySelector('i').className = 'bi bi-bookmark-fill';
+        }
+      });
+    }).catch(function(){});
+
+  async function toggleBookmark(itemId, itemType, btn) {
+    try {
+      const res = await fetch('/bookmarks/toggle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ itemId, itemType })
+      });
+      const data = await res.json();
+      if (data.success) {
+        var icon = btn.querySelector('i');
+        if (data.action === 'added') {
+          btn.style.background = '#f3e5f5';
+          btn.style.color = '#7b1fa2';
+          icon.className = 'bi bi-bookmark-fill';
+          btn.title = 'Remove from bookmarks';
+        } else {
+          btn.style.background = '#f5f5f5';
+          btn.style.color = '#aaa';
+          icon.className = 'bi bi-bookmark';
+          btn.title = 'Save to bookmarks';
+        }
+      }
+    } catch(e) {}
+  }
+</script>
 </body>
 </html>
