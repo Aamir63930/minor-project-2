@@ -170,11 +170,21 @@
             <i class="bi bi-clock me-1"></i><%= new Date(pyq.uploadedAt).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }) %>
           </div>
         </div>
-        <a href="/<%= pyq.fileUrl %>" target="_blank"
-           class="btn btn-sm fw-semibold"
-           style="background:#7b1fa2;color:white;border:none;border-radius:8px;white-space:nowrap;">
-          <i class="bi bi-download me-1"></i>Download
-        </a>
+        <div class="d-flex gap-2 flex-shrink-0">
+          <a href="/<%= pyq.fileUrl %>" target="_blank"
+            class="btn btn-sm fw-semibold"
+            style="background:#7b1fa2;color:white;border:none;border-radius:8px;white-space:nowrap;">
+            <i class="bi bi-download me-1"></i>Download
+          </a>
+          <button
+            class="btn btn-sm bookmark-btn"
+            id="bm-<%= pyq._id %>"
+            onclick="toggleBookmark('<%= pyq._id %>','pyq',this)"
+            style="background:#f5f5f5;color:#aaa;border:none;border-radius:8px;font-size:0.82rem;padding:6px 10px;"
+            title="Save to bookmarks">
+            <i class="bi bi-bookmark"></i>
+          </button>
+        </div>
       </div>
     <% }); %>
   <% } %>
