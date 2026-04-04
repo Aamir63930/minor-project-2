@@ -372,3 +372,149 @@ async function togglePin(id, btn) {
     }
   } catch {}
 }
+
+// ─── Star Rating System ─────────────────────
+const RatingSystem = {
+
+  currentMaterialId: null,
+  currentStars: 0,
+  existingComment: '',
+
+  open(materialId, materialTitle, existingStars, existingComment) {
+    this.currentMaterialId = materialId;
+    this.currentStars = existingStars || 0;
+    this.existingComment = existingComment || '';
+
+    var modal = document.getElementById('rating-modal-overlay');
+    var titleEl = document.getElementById('rating-material-title');
+    var commentEl = document.getElementById('rating-comment');
+
+    if (titleEl) titleEl.textContent = materialTitle;
+    if (commentEl) commentEl.value = existingComment || '';
+    if (modal) modal.classList.add('show');
+
+    this.setStars(this.currentStars);
+
+    document.body.style.overflow = 'hidden';
+  },
+
+  close() {
+    var modal = document.getElementById('rating-modal-overlay');
+    if (modal) modal.classList.remove('show');
+    document.body.style.overflow = '';
+    this.currentMaterialId = null;
+    this.currentStars = 0;
+  },
+
+  setStars(n) {
+    this.currentStars = n;
+    document.querySelectorAll('#rating-stars .star').forEach(function(star, i) {
+      star.classList.toggle('filled', i < n);
+    });
+
+    var labels = ['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'];
+    var labelEl = document.getElementById('rating-label');
+    if (labelEl) {
+      labelEl.textContent = n > 0 ? labels[n] : 'Tap a star to rate';
+      labelEl.style.color = n > 0 ? '#FFB800' : '#aaa';
+    }
+  },
+
+  hover(n) {
+    document.querySelectorAll('#rating-stars .star').forEach(function(star, i) {
+      star.classList.toggle('hover', i < n);
+      star.classList.remove('filled');
+    });
+  },
+
+  hoverOut() {
+    document.querySelectorAll('#rating-stars .star').forEach(function(star) {
+      star.classList.remove('hover');
+    });
+    this.setStars(this.currentStars);
+  },
+
+  async submit() {
+    if (!this.currentStars) {
+      var labelEl = document.getElementById('rating-label');
+      if (labelEl) {
+        labelEl.textContent = 'Please select a star rating!';
+        labelEl.style.color = '#c62828';
+      }
+      return;
+    }
+
+    var comment = document.getElementById('rating-comment');
+    var submitBtn = document.getElementById('rating-submit-btn');
+    if (submitBtn) {
+      submitBtn.textContent = 'Submitting...';
+      submitBtn.disabled = true;
+    }
+
+    try {
+      const res = await fetch('/ratings/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          materialId: this.currentMaterialId,
+          stars: this.currentStars,
+          comment: comment ? comment.value : ''
+        })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        // Update the rating display on the page
+        this.updateDisplayOnPage(
+          this.currentMaterialId,
+          data.avgStars,
+          data.totalRatings,
+          data.userStars
+        );
+        this.close();
+        Toast.success('Rating submitted! Thank you.');
+      } else {
+        Toast.error(data.message || 'Failed to submit rating.');
+      }
+    } catch (e) {
+      Toast.error('Network error. Please try again.');
+    } finally {
+      if (submitBtn) {
+        submitBtn.textContent = 'Submit Rating';
+        submitBtn.disabled = false;
+      }
+    }
+  },
+
+  updateDisplayOnPage(materialId, avgStars, totalRatings, userStars) {
+    // Update avg stars display
+    var displayEl = document.getElementById('rating-display-' + materialId);
+    if (displayEl) {
+      displayEl.innerHTML = this.buildStarsHTML(avgStars, totalRatings, userStars);
+    }
+
+    // Update rate button text
+    var rateBtn = document.getElementById('rate-btn-' + materialId);
+    if (rateBtn) {
+      rateBtn.innerHTML = '<i class="bi bi-star-fill" style="color:#FFB800;"></i> Edit Rating';
+      rateBtn.style.background = '#fff8e1';
+      rateBtn.style.color = '#f57c00';
+    }
+  },
+
+  buildStarsHTML(avgStars, totalRatings, userStars) {
+    var filled = Math.round(avgStars);
+    var starsHTML = '';
+    for (var i = 1; i <= 5; i++) {
+      starsHTML += '<span class="s' + (i <= filled ? ' filled' : '') + '">★</span>';
+    }
+    return '<div class="stars-small">' + starsHTML + '</div>' +
+      '<span style="font-weight:700;color:#333;">' + avgStars + '</span>' +
+      '<span style="color:#aaa;">(' + totalRatings + ')</span>' +
+      (userStars ? '<span style="color:#2e7d32;font-size:0.68rem;">✓ You rated ' + userStars + '★</span>' : '');
+  }
+};
+
+function openRatingModal(materialId, title, existingStars, existingComment) {
+  RatingSystem.open(materialId, title, existingStars, existingComment);
+}
