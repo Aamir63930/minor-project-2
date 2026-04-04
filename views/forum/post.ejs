@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= post.title %> — Forum</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="/css/main.css" rel="stylesheet">
+  <style>
+    body { background:#f0f4ff; font-family:'Segoe UI',sans-serif; }
+    .post-box {
+      background:white; border-radius:16px;
+      border:0.5px solid #e0e7ff; padding:24px 28px;
+      margin-bottom:16px;
+    }
+    .post-box.pinned { border-left:4px solid #FFB800; }
+    .reply-box {
+      background:white; border-radius:14px;
+      border:0.5px solid #e0e7ff;
+      padding:18px 22px; margin-bottom:10px;
+    }
+    .reply-box.official {
+      background:#f0fff4;
+      border-color:#81c784; border-left:4px solid #2e7d32;
+    }
+    .author-chip {
+      display:inline-flex; align-items:center;
+      gap:5px; font-size:0.75rem; font-weight:600;
+      padding:3px 10px; border-radius:20px;
+    }
+    .chip-student { background:#eef2ff; color:#003399; }
+    .chip-faculty { background:#e8f5e9; color:#2e7d32; }
+    .chip-admin { background:#fff3e0; color:#e65100; }
+    .upvote-btn {
+      display:inline-flex; align-items:center; gap:5px;
+      background:#f5f5f5; border:none; border-radius:8px;
+      padding:6px 12px; font-size:0.78rem; font-weight:600;
+      cursor:pointer; color:#666; transition:all 0.15s;
+    }
+    .upvote-btn:hover { background:#eef2ff; color:#003399; }
+    .upvote-btn.upvoted { background:#eef2ff; color:#003399; }
+    .action-btn {
+      background:none; border:none; font-size:0.75rem;
+      font-weight:600; color:#aaa; cursor:pointer;
+      padding:4px 8px; border-radius:6px;
+      transition:all 0.15s;
+    }
+    .action-btn:hover { background:#f5f5f5; color:#333; }
+    .reply-form {
+      background:white; border-radius:16px;
+      border:0.5px solid #e0e7ff; padding:24px;
+      margin-top:16px;
+    }
+    .form-control:focus {
+      border-color:#003399;
+      box-shadow:0 0 0 3px rgba(0,51,153,0.12);
+    }
+    .btn-reply {
+      background:linear-gradient(135deg,#003399,#0055cc);
+      color:white; border:none; border-radius:10px;
+      padding:10px 24px; font-weight:700;
+      font-size:0.88rem; cursor:pointer;
+    }
+    .official-badge {
+      background:#2e7d32; color:white;
+      font-size:0.7rem; font-weight:700;
+      padding:3px 10px; border-radius:20px;
+      display:inline-flex; align-items:center; gap:4px;
+    }
+    .resolved-banner {
+      background:#e8f5e9; border:1px solid #c8e6c9;
+      border-radius:12px; padding:12px 16px;
+      margin-bottom:16px; font-size:0.85rem;
+      color:#2e7d32; font-weight:600;
+    }
+    .back-btn {
+      background:white; color:#003399;
+      border:2px solid #e0e7ff; border-radius:10px;
+      padding:7px 16px; font-weight:600;
+      font-size:0.82rem; text-decoration:none;
+      display:inline-flex; align-items:center;
+      gap:6px; margin-bottom:16px;
+    }
+    .back-btn:hover {
+      background:#003399; color:white; border-color:#003399;
+    }
+  </style>
+</head>
+<body data-authenticated="true">
+
+<% if (user.role === 'student') { %>
+  <%- include('../partials/studentNavbar') %>
+<% } else { %>
+  <%- include('../partials/facultyNavbar') %>
+<% } %>
+
+<div class="container-fluid px-3 px-md-4 py-4"
+  style="max-width:800px;margin:0 auto;">
+
+  <a href="/forum/<%= subject.subjectCode %>"
+    class="back-btn">
+    <i class="bi bi-arrow-left"></i>
+    Back to <%= subject.subjectCode %> Forum
+  </a>
+
+  <% if (success) { %>
+    <div id="page-toast" data-message="<%= success %>"
+      data-type="success" class="d-none"></div>
+  <% } %>
+  <% if (error) { %>
+    <div id="page-toast" data-message="<%= error %>"
+      data-type="error" class="d-none"></div>
+  <% } %>
+
+  <% if (post.isResolved) { %>
+    <div class="resolved-banner">
+      <i class="bi bi-check-circle-fill me-2"></i>
+      This question has been marked as resolved.
+    </div>
+  <% } %>
+
+  <!-- Question Post -->
+  <div class="post-box <%= post.isPinned ? 'pinned' : '' %>">
+
+    <div class="d-flex align-items-center
+      justify-content-between flex-wrap gap-2 mb-3">
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <span class="author-chip chip-<%= post.authorRole %>">
+          <i class="bi bi-person-fill"></i>
+          <%= post.authorName %>
+          <% if (post.authorRole !== 'student') { %>
+            <i class="bi bi-patch-check-fill"
+              style="color:#1565c0;"></i>
+          <% } %>
+        </span>
+        <% if (post.isPinned) { %>
+          <span style="color:#FFB800;font-size:0.8rem;">
+            <i class="bi bi-pin-fill me-1"></i>Pinned
+          </span>
+        <% } %>
+      </div>
+      <span style="font-size:0.75rem;color:#aaa;">
+        <i class="bi bi-clock me-1"></i>
+        <%= new Date(post.createdAt).toLocaleDateString(
+          'en-IN',
+          {day:'numeric',month:'long',year:'numeric'}
+        ) %>
+        at
+        <%= new Date(post.createdAt).toLocaleTimeString(
+          'en-IN',
+          {hour:'2-digit',minute:'2-digit',hour12:true}
+        ) %>
+      </span>
+    </div>
+
+    <h5 class="fw-bold mb-3" style="color:#1a1a1a;line-height:1.4;">
+      <%= post.title %>
+    </h5>
+
+    <p style="font-size:0.9rem;color:#444;line-height:1.7;margin-bottom:20px;">
+      <%= post.content %>
+    </p>
+
+    <!-- Post Actions -->
+    <div class="d-flex align-items-center gap-2 flex-wrap
+      pt-3" style="border-top:0.5px solid #f0f0f0;">
+
+      <button class="upvote-btn <%= post.hasUpvoted ? 'upvoted' : '' %>"
+        id="post-upvote-btn"
+        onclick="upvotePost('<%= post._id %>')">
+        <i class="bi bi-arrow-up-circle<%= post.hasUpvoted ? '-fill' : '' %>"></i>
+        <span id="post-upvote-count"><%= post.upvoteCount %></span>
+        upvote<span id="post-upvote-plural"><%= post.upvoteCount !== 1 ? 's' : '' %></span>
+      </button>
+
+      <span style="font-size:0.78rem;color:#aaa;">
+        <i class="bi bi-eye me-1"></i><%= post.views %> views
+      </span>
+
+      <span style="font-size:0.78rem;color:#aaa;">
+        <i class="bi bi-chat me-1"></i>
+        <%= replies.length %> repl<%= replies.length === 1 ? 'y' : 'ies' %>
+      </span>
+
+      <div class="ms-auto d-flex gap-2 flex-wrap">
+        <!-- Resolve button (author or faculty) -->
+        <% const canResolve =
+          post.authorId.toString() === user.id ||
+          user.role === 'faculty' ||
+          user.role === 'admin'; %>
+        <% if (canResolve) { %>
+          <button class="action-btn"
+            id="resolve-btn"
+            onclick="toggleResolve('<%= post._id %>')"
+            style="color:<%= post.isResolved ? '#2e7d32' : '#666' %>;">
+            <i class="bi bi-check-circle<%= post.isResolved ? '-fill' : '' %> me-1"></i>
+            <%= post.isResolved ? 'Unresolved' : 'Mark Resolved' %>
+          </button>
+        <% } %>
+
+        <!-- Pin (faculty only) -->
+        <% if (user.role === 'faculty' || user.role === 'admin') { %>
+          <button class="action-btn"
+            id="pin-btn"
+            onclick="togglePin('<%= post._id %>')"
+            style="color:<%= post.isPinned ? '#FFB800' : '#aaa' %>;">
+            <i class="bi bi-pin<%= post.isPinned ? '-fill' : '' %> me-1"></i>
+            <%= post.isPinned ? 'Unpin' : 'Pin' %>
+          </button>
+        <% } %>
+
+        <!-- Delete (author or admin) -->
+        <% if (post.authorId.toString() === user.id ||
+               user.role === 'admin') { %>
+          <button class="action-btn"
+            style="color:#c62828;"
+            onclick="deletePost('<%= post._id %>',
+              '<%= subject.subjectCode %>')">
+            <i class="bi bi-trash me-1"></i>Delete
+          </button>
+        <% } %>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Replies -->
+  <% if (replies.length > 0) { %>
+    <h6 class="fw-bold mb-3"
+      style="color:#555;font-size:0.88rem;
+        text-transform:uppercase;letter-spacing:0.5px;">
+      <i class="bi bi-chat-fill me-2"
+        style="color:#003399;"></i>
+      <%= replies.length %> Repl<%= replies.length === 1 ? 'y' : 'ies' %>
+    </h6>
+
+    <% replies.forEach(function(reply) { %>
+      <div class="reply-box
+        <%= reply.isOfficialAnswer ? 'official' : '' %>"
+        id="reply-<%= reply._id %>">
+
+        <div class="d-flex align-items-center
+          justify-content-between flex-wrap gap-2 mb-2">
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <span class="author-chip
+              chip-<%= reply.authorRole %>">
+              <i class="bi bi-person-fill"></i>
+              <%= reply.authorName %>
+              <% if (reply.authorRole !== 'student') { %>
+                <i class="bi bi-patch-check-fill"
+                  style="color:#1565c0;"></i>
+              <% } %>
+            </span>
+            <% if (reply.isOfficialAnswer) { %>
+              <span class="official-badge">
+                <i class="bi bi-patch-check-fill"></i>
+                Official Answer
+              </span>
+            <% } %>
+          </div>
+          <span style="font-size:0.72rem;color:#aaa;">
+            <%= new Date(reply.createdAt).toLocaleDateString(
+              'en-IN',
+              {day:'numeric',month:'short',year:'numeric'}
+            ) %>
+            at
+            <%= new Date(reply.createdAt).toLocaleTimeString(
+              'en-IN',
+              {hour:'2-digit',minute:'2-digit',hour12:true}
+            ) %>
+          </span>
+        </div>
+
+        <p style="font-size:0.88rem;color:#333;
+          line-height:1.6;margin-bottom:12px;">
+          <%= reply.content %>
+        </p>
+
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <button class="upvote-btn
+            <%= reply.hasUpvoted ? 'upvoted' : '' %>"
+            id="reply-upvote-btn-<%= reply._id %>"
+            onclick="upvoteReply('<%= reply._id %>')">
+            <i class="bi bi-arrow-up-circle<%= reply.hasUpvoted ? '-fill' : '' %>"></i>
+            <span id="reply-count-<%= reply._id %>">
+              <%= reply.upvoteCount %>
+            </span>
+          </button>
+
+          <!-- Faculty: toggle official -->
+          <% if (user.role === 'faculty' ||
+                 user.role === 'admin') { %>
+            <button class="action-btn"
+              id="official-btn-<%= reply._id %>"
+              onclick="toggleOfficial('<%= reply._id %>')"
+              style="color:<%= reply.isOfficialAnswer ? '#2e7d32' : '#aaa' %>;">
+              <i class="bi bi-patch-check<%= reply.isOfficialAnswer ? '-fill' : '' %> me-1"></i>
+              <%= reply.isOfficialAnswer ? 'Remove official' : 'Mark official' %>
+            </button>
+          <% } %>
+        </div>
+
+      </div>
+    <% }); %>
+  <% } %>
+
+  <!-- Reply Form -->
+  <div class="reply-form">
+    <h6 class="fw-bold mb-3" style="font-size:0.92rem;">
+      <i class="bi bi-reply-fill me-2"
+        style="color:#003399;"></i>
+      <% if (user.role === 'faculty' || user.role === 'admin') { %>
+        Post Official Answer
+      <% } else { %>
+        Post a Reply
+      <% } %>
+    </h6>
+    <form action="/forum/<%= subject.subjectCode %>/post/<%= post._id %>/reply"
+      method="POST">
+      <div class="mb-3">
+        <textarea name="content" class="form-control"
+          rows="4" maxlength="2000" required
+          placeholder="<%= user.role === 'faculty' || user.role === 'admin' ? 'Write your official answer here...' : 'Write your reply here...' %>"
+          style="border-radius:10px;border-color:#e0e7ff;
+            padding:12px 14px;font-size:0.88rem;resize:none;">
+        </textarea>
+      </div>
+      <% if (user.role === 'faculty' || user.role === 'admin') { %>
+        <div style="background:#e8f5e9;border-radius:10px;
+          padding:10px 14px;margin-bottom:12px;
+          font-size:0.8rem;color:#2e7d32;font-weight:600;">
+          <i class="bi bi-info-circle me-1"></i>
+          Your reply will be automatically marked as an
+          official answer.
+        </div>
+      <% } %>
+      <div class="d-flex justify-content-end">
+        <button type="submit" class="btn-reply">
+          <i class="bi bi-send-fill me-2"></i>
+          <%= user.role === 'faculty' || user.role === 'admin'
+            ? 'Post Official Answer'
+            : 'Post Reply' %>
+        </button>
+      </div>
+    </form>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/main.js"></script>
+<script>
+  async function upvotePost(postId) {
+    var res = await fetch('/forum/post/' + postId + '/upvote',
+      { method: 'POST' });
+    var data = await res.json();
+    if (data.success) {
+      var btn = document.getElementById('post-upvote-btn');
+      var cnt = document.getElementById('post-upvote-count');
+      var plr = document.getElementById('post-upvote-plural');
+      cnt.textContent = data.upvoteCount;
+      plr.textContent = data.upvoteCount !== 1 ? 's' : '';
+      if (data.hasUpvoted) {
+        btn.classList.add('upvoted');
+        btn.querySelector('i').className =
+          'bi bi-arrow-up-circle-fill';
+      } else {
+        btn.classList.remove('upvoted');
+        btn.querySelector('i').className =
+          'bi bi-arrow-up-circle';
+      }
+    }
+  }
+
+  async function upvoteReply(replyId) {
+    var res = await fetch('/forum/reply/' + replyId + '/upvote',
+      { method: 'POST' });
+    var data = await res.json();
+    if (data.success) {
+      var btn = document.getElementById(
+        'reply-upvote-btn-' + replyId);
+      var cnt = document.getElementById(
+        'reply-count-' + replyId);
+      if (cnt) cnt.textContent = data.upvoteCount;
+      if (data.hasUpvoted) {
+        btn.classList.add('upvoted');
+        btn.querySelector('i').className =
+          'bi bi-arrow-up-circle-fill';
+      } else {
+        btn.classList.remove('upvoted');
+        btn.querySelector('i').className =
+          'bi bi-arrow-up-circle';
+      }
+    }
+  }
+
+  async function toggleResolve(postId) {
+    var res = await fetch('/forum/post/' + postId + '/resolve',
+      { method: 'POST' });
+    var data = await res.json();
+    if (data.success) {
+      var btn = document.getElementById('resolve-btn');
+      if (data.isResolved) {
+        btn.style.color = '#2e7d32';
+        btn.innerHTML =
+          '<i class="bi bi-check-circle-fill me-1"></i>Unresolved';
+        Toast.success('Marked as resolved!');
+      } else {
+        btn.style.color = '#666';
+        btn.innerHTML =
+          '<i class="bi bi-check-circle me-1"></i>Mark Resolved';
+        Toast.info('Marked as unresolved.');
+      }
+    }
+  }
+
+  async function togglePin(postId) {
+    var res = await fetch('/forum/post/' + postId + '/pin',
+      { method: 'POST' });
+    var data = await res.json();
+    if (data.success) {
+      var btn = document.getElementById('pin-btn');
+      if (data.isPinned) {
+        btn.style.color = '#FFB800';
+        btn.innerHTML =
+          '<i class="bi bi-pin-fill me-1"></i>Unpin';
+        Toast.success('Post pinned!');
+      } else {
+        btn.style.color = '#aaa';
+        btn.innerHTML =
+          '<i class="bi bi-pin me-1"></i>Pin';
+        Toast.info('Post unpinned.');
+      }
+    }
+  }
+
+  async function toggleOfficial(replyId) {
+    var res = await fetch(
+      '/forum/reply/' + replyId + '/official',
+      { method: 'POST' });
+    var data = await res.json();
+    if (data.success) {
+      var box = document.getElementById('reply-' + replyId);
+      var btn = document.getElementById(
+        'official-btn-' + replyId);
+      if (data.isOfficialAnswer) {
+        box.classList.add('official');
+        btn.style.color = '#2e7d32';
+        btn.innerHTML =
+          '<i class="bi bi-patch-check-fill me-1"></i>' +
+          'Remove official';
+        Toast.success('Marked as official answer!');
+      } else {
+        box.classList.remove('official');
+        btn.style.color = '#aaa';
+        btn.innerHTML =
+          '<i class="bi bi-patch-check me-1"></i>' +
+          'Mark official';
+        Toast.info('Removed official status.');
+      }
+    }
+  }
+
+  async function deletePost(postId, subjectCode) {
+    if (!confirm(
+      'Delete this question and all its replies? This cannot be undone.'
+    )) return;
+    var res = await fetch('/forum/post/' + postId + '/delete',
+      { method: 'POST' });
+    var data = await res.json();
+    if (data.success) {
+      window.location.href = '/forum/' + subjectCode;
+    } else {
+      Toast.error('Failed to delete post.');
+    }
+  }
+</script>
+</body>
+</html>
