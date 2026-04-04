@@ -225,5 +225,72 @@
     } catch(e) {}
   }
 </script>
+
+<!-- Rating Modal -->
+<div class="rating-modal-overlay" id="rating-modal-overlay"
+  onclick="if(event.target===this) RatingSystem.close()">
+  <div class="rating-modal-box">
+
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <h5 class="fw-bold mb-0" style="font-size:1rem;">
+        <i class="bi bi-star-fill me-2" style="color:#FFB800;"></i>Rate Material
+      </h5>
+      <button onclick="RatingSystem.close()"
+        style="background:#f5f5f5;border:none;border-radius:8px;padding:6px 10px;cursor:pointer;color:#666;">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <div id="rating-material-title"
+      style="font-size:0.88rem;color:#555;margin-bottom:16px;line-height:1.4;
+        background:#f8f9ff;padding:10px 14px;border-radius:10px;border:0.5px solid #e0e7ff;">
+    </div>
+
+    <!-- Stars -->
+    <div class="text-center mb-3">
+      <div class="star-rating justify-content-center mb-2" id="rating-stars">
+        <% for(let s = 1; s <= 5; s++) { %>
+          <span class="star"
+            onclick="RatingSystem.setStars(<%= s %>)"
+            onmouseover="RatingSystem.hover(<%= s %>)"
+            onmouseout="RatingSystem.hoverOut()">★</span>
+        <% } %>
+      </div>
+      <div id="rating-label"
+        style="font-size:0.85rem;font-weight:600;color:#aaa;height:20px;">
+        Tap a star to rate
+      </div>
+    </div>
+
+    <!-- Comment -->
+    <div class="mb-4">
+      <label style="font-size:0.82rem;font-weight:600;color:#555;display:block;margin-bottom:6px;">
+        Comment <span style="color:#aaa;font-weight:400;">(optional)</span>
+      </label>
+      <textarea id="rating-comment" rows="3" maxlength="300"
+        placeholder="What did you think of this material?"
+        style="width:100%;border-radius:10px;border:0.5px solid #e0e7ff;padding:10px 14px;font-size:0.85rem;resize:none;font-family:'Segoe UI',sans-serif;"
+        oninput="document.getElementById('comment-count').textContent=this.value.length">
+      </textarea>
+      <div style="text-align:right;font-size:0.7rem;color:#aaa;">
+        <span id="comment-count">0</span>/300
+      </div>
+    </div>
+
+    <div class="d-flex gap-3">
+      <button id="rating-submit-btn"
+        onclick="RatingSystem.submit()"
+        style="flex:1;background:linear-gradient(135deg,#003399,#0055cc);color:white;border:none;border-radius:12px;padding:12px;font-weight:700;font-size:0.9rem;cursor:pointer;">
+        Submit Rating
+      </button>
+      <button onclick="RatingSystem.close()"
+        style="background:#f5f5f5;color:#666;border:none;border-radius:12px;padding:12px 20px;font-weight:600;cursor:pointer;">
+        Cancel
+      </button>
+    </div>
+
+  </div>
+</div>
+
 </body>
 </html>
