@@ -335,6 +335,12 @@
                     &nbsp;at&nbsp;
                     <%= new Date(mat.uploadedAt).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true}) %>
                 </div>
+                <div class="recent-mat-rating mt-1"
+                  data-subject="<%= mat.subjectCode %>"
+                  data-material="<%= mat._id %>">
+                  <span style="color:#ddd;font-size:0.8rem;">★★★★★</span>
+                  <span style="color:#bbb;font-size:0.7rem;">Loading...</span>
+                </div>
                 <div style="font-size:0.68rem;color:#aaa;margin-top:2px;"
                   id="fac-rating-<%= mat._id %>">
                 </div>
@@ -408,33 +414,41 @@
 
 <script>
   // Load ratings for recently uploaded materials
-  var materialIds = [
-    <% recentMaterials.forEach((m, i) => { %>
-      '<%= m._id %>'<%= i < recentMaterials.length - 1 ? ',' : '' %>
-    <% }); %>
-  ];
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.recent-mat-rating').forEach(function(el) {
+      var subjectCode = el.dataset.subject;
+      var materialId = el.dataset.material;
 
-  materialIds.forEach(function(id) {
-    fetch('/ratings/stats/' + id)
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        if (data.stats && data.stats[id]) {
-          var s = data.stats[id];
-          var el = document.getElementById('fac-rating-' + id);
-          if (el) {
+      fetch('/ratings/stats/' + subjectCode)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          var stats = data.stats || {};
+          if (stats[materialId]) {
+            var s = stats[materialId];
+            var filled = Math.round(s.avgStars);
             var stars = '';
             for (var i = 1; i <= 5; i++) {
               stars += '<span style="color:' +
-                (i <= Math.round(s.avgStars) ? '#FFB800' : '#ddd') +
-                ';font-size:0.75rem;">★</span>';
+                (i <= filled ? '#FFB800' : '#ddd') +
+                ';font-size:0.8rem;">★</span>';
             }
             el.innerHTML = stars +
-              ' <span style="font-weight:600;">' + s.avgStars + '</span>' +
-              ' <span style="color:#bbb;">(' + s.totalRatings + ' rating' +
+              ' <span style="font-weight:600;font-size:0.72rem;color:#555;">' +
+              s.avgStars + '</span>' +
+              ' <span style="color:#bbb;font-size:0.7rem;">(' +
+              s.totalRatings + ' rating' +
               (s.totalRatings !== 1 ? 's' : '') + ')</span>';
+          } else {
+            el.innerHTML =
+              '<span style="color:#ddd;font-size:0.8rem;">★★★★★</span>' +
+              ' <span style="color:#bbb;font-size:0.7rem;">No ratings yet</span>';
           }
-        }
-      }).catch(function() {});
+        }).catch(function() {
+          el.innerHTML =
+            '<span style="color:#ddd;font-size:0.8rem;">★★★★★</span>' +
+            ' <span style="color:#bbb;font-size:0.7rem;">No ratings yet</span>';
+        });
+    });
   });
 </script>
 
