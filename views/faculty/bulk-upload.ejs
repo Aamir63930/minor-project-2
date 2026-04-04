@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bulk Upload — SOET Portal</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+  <link href="/css/main.css" rel="stylesheet">
+  <style>
+    :root { --blue:#003399; --green:#2e7d32; }
+    body { background:#f0f4ff; font-family:'Segoe UI',sans-serif; }
+    .page-card {
+      background:white; border-radius:20px; padding:32px;
+      box-shadow:0 4px 20px rgba(0,0,0,0.08);
+      max-width:860px; margin:0 auto;
+    }
+    .type-btn {
+      border:2px solid #e0e7ff; border-radius:14px;
+      padding:18px 20px; cursor:pointer;
+      transition:all 0.2s; background:white;
+      text-align:center; user-select:none;
+    }
+    .type-btn:hover { border-color:var(--blue); }
+    .type-btn.selected {
+      border-color:var(--blue);
+      background:#eef2ff;
+    }
+    .type-btn .type-icon {
+      font-size:2rem; margin-bottom:8px; display:block;
+    }
+    .type-btn .type-name {
+      font-weight:700; font-size:0.95rem; color:#333;
+    }
+    .type-btn .type-desc {
+      font-size:0.75rem; color:#aaa; margin-top:3px;
+    }
+    .drop-zone {
+      border:2px dashed #c5cae9; border-radius:16px;
+      padding:48px 20px; text-align:center;
+      cursor:pointer; transition:all 0.2s;
+      background:#f8f9ff;
+    }
+    .drop-zone.dragover {
+      border-color:var(--blue);
+      background:#eef2ff;
+    }
+    .form-label { font-weight:600; font-size:0.85rem; color:#555; }
+    .form-control, .form-select {
+      border-radius:10px; border-color:#e0e7ff;
+      padding:10px 14px; font-size:0.9rem;
+    }
+    .form-control:focus, .form-select:focus {
+      border-color:var(--blue);
+      box-shadow:0 0 0 3px rgba(0,51,153,0.12);
+    }
+    .unit-grid {
+      display:grid; grid-template-columns:repeat(6,1fr); gap:8px;
+    }
+    .unit-btn {
+      border:2px solid #e0e7ff; border-radius:10px;
+      padding:8px 0; text-align:center; cursor:pointer;
+      font-weight:700; font-size:0.85rem; color:#666;
+      transition:all 0.2s; background:white; user-select:none;
+    }
+    .unit-btn:hover { border-color:var(--blue); color:var(--blue); }
+    .unit-btn.selected { background:var(--blue); color:white; border-color:var(--blue); }
+    .file-queue {
+      border:0.5px solid #e0e7ff; border-radius:14px;
+      overflow:hidden; margin-top:16px;
+    }
+    .file-item {
+      display:flex; align-items:center; gap:12px;
+      padding:12px 16px; border-bottom:0.5px solid #f5f5f5;
+      transition:background 0.15s;
+    }
+    .file-item:last-child { border-bottom:none; }
+    .file-icon {
+      width:38px; height:38px; border-radius:10px;
+      display:flex; align-items:center; justify-content:center;
+      font-size:1.1rem; flex-shrink:0;
+      background:#fce4ec; color:#c62828;
+    }
+    .file-name {
+      font-size:0.85rem; font-weight:600;
+      color:#1a1a1a; flex-grow:1;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .file-size {
+      font-size:0.72rem; color:#aaa; flex-shrink:0;
+    }
+    .progress-bar-wrap {
+      height:6px; background:#e0e7ff;
+      border-radius:3px; overflow:hidden; margin-top:4px;
+    }
+    .progress-bar-fill {
+      height:100%; border-radius:3px;
+      background:linear-gradient(90deg,var(--blue),#0077ff);
+      transition:width 0.3s ease;
+    }
+    .file-status {
+      font-size:0.72rem; font-weight:600;
+      padding:3px 8px; border-radius:6px;
+      white-space:nowrap; flex-shrink:0;
+    }
+    .status-waiting { background:#f5f5f5; color:#aaa; }
+    .status-uploading { background:#eef2ff; color:var(--blue); }
+    .status-success { background:#e8f5e9; color:#2e7d32; }
+    .status-error { background:#fce4ec; color:#c62828; }
+    .remove-btn {
+      background:none; border:none; color:#ddd;
+      cursor:pointer; font-size:1rem; padding:2px 6px;
+      border-radius:6px; transition:all 0.15s; flex-shrink:0;
+    }
+    .remove-btn:hover { background:#fce4ec; color:#c62828; }
+    .btn-upload-all {
+      background:linear-gradient(135deg,var(--blue),#0055cc);
+      color:white; border:none; border-radius:12px;
+      padding:13px 30px; font-weight:700; font-size:1rem;
+      cursor:pointer; transition:all 0.3s; width:100%;
+    }
+    .btn-upload-all:hover { transform:translateY(-1px); }
+    .btn-upload-all:disabled { opacity:0.6; cursor:not-allowed; }
+    .summary-bar {
+      background:#f0f4ff; border-radius:12px;
+      padding:14px 18px; margin-top:16px;
+      display:flex; gap:20px; flex-wrap:wrap;
+      align-items:center; justify-content:space-between;
+    }
+    .summary-stat {
+      text-align:center;
+    }
+    .summary-stat .n {
+      font-size:1.4rem; font-weight:700; line-height:1;
+    }
+    .summary-stat .l {
+      font-size:0.72rem; color:#aaa; margin-top:2px;
+    }
+  </style>
+</head>
+<body data-authenticated="true">
+
+<%- include('../partials/facultyNavbar') %>
+
+<div class="container-fluid px-3 px-md-4 py-4">
+<div class="page-card">
+
+  <div class="d-flex align-items-center gap-3 mb-4">
+    <div style="width:52px;height:52px;background:#eef2ff;
+      border-radius:14px;display:flex;align-items:center;
+      justify-content:center;font-size:1.5rem;color:var(--blue);">
+      <i class="bi bi-cloud-upload-fill"></i>
+    </div>
+    <div>
+      <h4 class="fw-bold mb-0">Bulk Upload</h4>
+      <div class="text-muted" style="font-size:0.83rem;">
+        Upload up to 20 PDFs at once · Max 20MB each
+      </div>
+    </div>
+    <a href="/faculty/dashboard"
+      style="margin-left:auto;background:#f0f4ff;color:var(--blue);
+        border:2px solid #e0e7ff;border-radius:10px;padding:8px 16px;
+        font-weight:600;font-size:0.85rem;text-decoration:none;">
+      <i class="bi bi-arrow-left me-1"></i>Dashboard
+    </a>
+  </div>
+
+  <!-- Step 1: Upload Type -->
+  <div class="mb-4">
+    <div class="form-label mb-2">
+      Step 1 — What are you uploading?
+    </div>
+    <div class="row g-3">
+      <div class="col-6">
+        <div class="type-btn selected" id="type-material"
+          onclick="selectType('material')">
+          <span class="type-icon">📚</span>
+          <div class="type-name">Study Materials</div>
+          <div class="type-desc">Unit-wise lecture notes & PDFs</div>
+        </div>
+      </div>
+      <div class="col-6">
+        <div class="type-btn" id="type-pyq"
+          onclick="selectType('pyq')">
+          <span class="type-icon">📝</span>
+          <div class="type-name">PYQ Papers</div>
+          <div class="type-desc">Previous year question papers</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 2: Common fields -->
+  <div class="mb-4">
+    <div class="form-label mb-2">
+      Step 2 — Select Subject
+    </div>
+    <select id="subjectSelect" class="form-select">
+      <option value="">— Search or select subject —</option>
+      <% subjectOptions.forEach(s => { %>
+        <option value="<%= s.subjectCode %>">
+          [Sem <%= s.semester %>] <%= s.subjectCode %> — <%= s.name %>
+        </option>
+      <% }); %>
+    </select>
+  </div>
+
+  <!-- Material-specific fields -->
+  <div id="material-fields" class="mb-4">
+    <div class="form-label mb-2">Unit for all files</div>
+    <div class="unit-grid" id="unitGrid">
+      <% for(let u=1;u<=6;u++) { %>
+        <div class="unit-btn" onclick="selectUnit(<%= u %>)">
+          Unit <%= u %>
+        </div>
+      <% } %>
+    </div>
+    <input type="hidden" id="selectedUnit">
+    <div class="text-muted mt-1" style="font-size:0.75rem;">
+      All files in this batch will be assigned to the selected unit.
+      Upload separate batches for different units.
+    </div>
+  </div>
+
+  <!-- PYQ-specific fields -->
+  <div id="pyq-fields" class="mb-4" style="display:none;">
+    <div class="row g-3">
+      <div class="col-12 col-md-4">
+        <label class="form-label">Exam Type</label>
+        <div class="d-flex gap-2">
+          <div class="type-btn flex-fill" id="exam-mid"
+            onclick="selectExamType('MidTerm',this)"
+            style="padding:12px;font-size:0.85rem;">
+            <div style="font-weight:700;">Mid-Term</div>
+          </div>
+          <div class="type-btn flex-fill" id="exam-end"
+            onclick="selectExamType('EndTerm',this)"
+            style="padding:12px;font-size:0.85rem;">
+            <div style="font-weight:700;">End-Term</div>
+          </div>
+        </div>
+        <input type="hidden" id="selectedExamType">
+      </div>
+      <div class="col-12 col-md-4">
+        <label class="form-label">Year</label>
+        <select id="selectedYear" class="form-select">
+          <option value="">— Year —</option>
+          <% years.forEach(y => { %>
+            <option value="<%= y %>"><%= y %></option>
+          <% }); %>
+        </select>
+      </div>
+      <div class="col-12 col-md-4">
+        <label class="form-label">Semester Type</label>
+        <select id="selectedSemType" class="form-select">
+          <option value="">— Type —</option>
+          <option value="odd">Odd (Jul–Nov)</option>
+          <option value="even">Even (Jan–Jun)</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 3: Drop Zone -->
+  <div class="mb-4">
+    <div class="form-label mb-2">
+      Step 3 — Select PDF Files
+    </div>
+    <div class="drop-zone" id="dropZone"
+      onclick="document.getElementById('fileInput').click()">
+      <i class="bi bi-cloud-upload"
+        style="font-size:3rem;color:#c5cae9;display:block;margin-bottom:12px;"></i>
+      <div class="fw-bold" style="color:#666;font-size:0.95rem;">
+        Click to browse or drag & drop PDF files here
+      </div>
+      <div class="text-muted mt-1" style="font-size:0.8rem;">
+        Select up to 20 PDF files · Max 20MB each
+      </div>
+    </div>
+    <input type="file" id="fileInput" accept=".pdf,application/pdf"
+      multiple class="d-none" onchange="addFiles(this.files)">
+  </div>
+
+  <!-- File Queue -->
+  <div id="fileQueueWrap" style="display:none;" class="mb-4">
+    <div class="d-flex align-items-center
+      justify-content-between mb-2">
+      <div class="form-label mb-0">
+        Files Queue
+        <span id="queueCount"
+          style="background:#eef2ff;color:var(--blue);
+            font-size:0.72rem;font-weight:700;
+            padding:2px 8px;border-radius:10px;margin-left:6px;">
+          0 files
+        </span>
+      </div>
+      <button onclick="clearQueue()"
+        style="background:none;border:none;color:#aaa;
+          font-size:0.78rem;cursor:pointer;">
+        Clear all
+      </button>
+    </div>
+    <div class="file-queue" id="fileQueue"></div>
+
+    <!-- Summary -->
+    <div class="summary-bar" id="summaryBar">
+      <div class="summary-stat">
+        <div class="n" id="total-count"
+          style="color:var(--blue);">0</div>
+        <div class="l">Total</div>
+      </div>
+      <div class="summary-stat">
+        <div class="n" id="success-count"
+          style="color:#2e7d32;">0</div>
+        <div class="l">Uploaded</div>
+      </div>
+      <div class="summary-stat">
+        <div class="n" id="error-count"
+          style="color:#c62828;">0</div>
+        <div class="l">Failed</div>
+      </div>
+      <div class="summary-stat">
+        <div class="n" id="waiting-count"
+          style="color:#aaa;">0</div>
+        <div class="l">Waiting</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upload Button -->
+  <button class="btn-upload-all" id="uploadAllBtn"
+    onclick="startUpload()" style="display:none;">
+    <i class="bi bi-cloud-upload me-2"></i>
+    Upload All Files
+  </button>
+
+  <div id="retryBar" style="display:none;margin-top:12px;text-align:center;">
+    <button onclick="retryFailed()"
+      style="background:#fce4ec;color:#c62828;border:none;
+        border-radius:10px;padding:10px 24px;
+        font-weight:700;font-size:0.88rem;cursor:pointer;">
+      <i class="bi bi-arrow-clockwise me-2"></i>Retry Failed Files
+    </button>
+  </div>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/main.js"></script>
+<script>
+  var currentType = 'material';
+  var fileQueue = [];
+  var isUploading = false;
+
+  // ── Select2 ──
+  $(document).ready(function() {
+    $('#subjectSelect').select2({
+      placeholder: '— Search or select subject —',
+      allowClear: true, width: '100%'
+    });
+  });
+
+  // ── Upload Type ──
+  function selectType(type) {
+    currentType = type;
+    document.getElementById('type-material').classList
+      .toggle('selected', type === 'material');
+    document.getElementById('type-pyq').classList
+      .toggle('selected', type === 'pyq');
+    document.getElementById('material-fields').style.display =
+      type === 'material' ? 'block' : 'none';
+    document.getElementById('pyq-fields').style.display =
+      type === 'pyq' ? 'block' : 'none';
+  }
+
+  // ── Unit ──
+  function selectUnit(u) {
+    document.querySelectorAll('.unit-btn').forEach(function(b) {
+      b.classList.remove('selected');
+    });
+    document.querySelectorAll('.unit-btn')[u-1]
+      .classList.add('selected');
+    document.getElementById('selectedUnit').value = u;
+  }
+
+  // ── Exam Type ──
+  function selectExamType(type, el) {
+    document.querySelectorAll('#pyq-fields .type-btn')
+      .forEach(function(b) { b.classList.remove('selected'); });
+    el.classList.add('selected');
+    document.getElementById('selectedExamType').value = type;
+  }
+
+  // ── Add Files ──
+  function addFiles(files) {
+    for (var i = 0; i < files.length; i++) {
+      var file = files[i];
+      if (file.type !== 'application/pdf') {
+        Toast.error(file.name + ' is not a PDF — skipped.');
+        continue;
+      }
+      if (file.size > 20 * 1024 * 1024) {
+        Toast.error(file.name + ' exceeds 20MB — skipped.');
+        continue;
+      }
+      if (fileQueue.length >= 20) {
+        Toast.warning('Maximum 20 files per batch.');
+        break;
+      }
+      // Check duplicate
+      var exists = fileQueue.some(function(f) {
+        return f.file.name === file.name;
+      });
+      if (!exists) {
+        fileQueue.push({
+          id: 'f_' + Date.now() + '_' + i,
+          file: file,
+          status: 'waiting',
+          error: null
+        });
+      }
+    }
+    renderQueue();
+  }
+
+  // ── Render Queue ──
+  function renderQueue() {
+    var wrap = document.getElementById('fileQueueWrap');
+    var queueEl = document.getElementById('fileQueue');
+    var btn = document.getElementById('uploadAllBtn');
+
+    if (fileQueue.length === 0) {
+      wrap.style.display = 'none';
+      btn.style.display = 'none';
+      return;
+    }
+
+    wrap.style.display = 'block';
+    btn.style.display = 'block';
+
+    document.getElementById('queueCount').textContent =
+      fileQueue.length + ' file' + (fileQueue.length !== 1 ? 's' : '');
+
+    queueEl.innerHTML = fileQueue.map(function(item) {
+      var sizeMB = (item.file.size / 1024 / 1024).toFixed(1);
+      var statusClass = 'status-' + item.status;
+      var statusText = {
+        waiting: 'Waiting',
+        uploading: 'Uploading...',
+        success: '✓ Done',
+        error: '✗ Failed'
+      }[item.status] || 'Waiting';
+
+      return '<div class="file-item" id="item-' + item.id + '">' +
+        '<div class="file-icon"><i class="bi bi-file-earmark-pdf-fill"></i></div>' +
+        '<div style="flex-grow:1;min-width:0;">' +
+          '<div class="file-name">' + item.file.name + '</div>' +
+          '<div class="progress-bar-wrap">' +
+            '<div class="progress-bar-fill" id="prog-' + item.id + '" style="width:' +
+            (item.status === 'success' ? '100' : '0') + '%"></div>' +
+          '</div>' +
+          (item.error ? '<div style="font-size:0.7rem;color:#c62828;margin-top:3px;">' +
+            item.error + '</div>' : '') +
+        '</div>' +
+        '<div class="file-size">' + sizeMB + ' MB</div>' +
+        '<span class="file-status ' + statusClass + '">' + statusText + '</span>' +
+        (item.status !== 'uploading' && item.status !== 'success' ?
+          '<button class="remove-btn" onclick="removeFile(\'' + item.id + '\')">' +
+          '<i class="bi bi-x-lg"></i></button>' : '') +
+      '</div>';
+    }).join('');
+
+    updateSummary();
+  }
+
+  // ── Remove File ──
+  function removeFile(id) {
+    fileQueue = fileQueue.filter(function(f) { return f.id !== id; });
+    renderQueue();
+  }
+
+  // ── Clear Queue ──
+  function clearQueue() {
+    if (isUploading) return;
+    fileQueue = [];
+    renderQueue();
+    document.getElementById('fileInput').value = '';
+  }
+
+  // ── Validate before upload ──
+  function validateSettings() {
+    var subject = $('#subjectSelect').val();
+    if (!subject) { Toast.error('Please select a subject.'); return false; }
+
+    if (currentType === 'material') {
+      var unit = document.getElementById('selectedUnit').value;
+      if (!unit) { Toast.error('Please select a unit (1–6).'); return false; }
+    } else {
+      var examType = document.getElementById('selectedExamType').value;
+      var year = document.getElementById('selectedYear').value;
+      var semType = document.getElementById('selectedSemType').value;
+      if (!examType) { Toast.error('Please select exam type.'); return false; }
+      if (!year) { Toast.error('Please select a year.'); return false; }
+      if (!semType) { Toast.error('Please select semester type.'); return false; }
+    }
+    return true;
+  }
+
+  // ── Start Upload ──
+  async function startUpload() {
+    if (isUploading) return;
+    if (!validateSettings()) return;
+
+    var waiting = fileQueue.filter(function(f) {
+      return f.status === 'waiting' || f.status === 'error';
+    });
+    if (waiting.length === 0) {
+      Toast.info('No files to upload.');
+      return;
+    }
+
+    isUploading = true;
+    document.getElementById('uploadAllBtn').disabled = true;
+    document.getElementById('uploadAllBtn').textContent = 'Uploading...';
+
+    var subject = $('#subjectSelect').val();
+
+    for (var i = 0; i < fileQueue.length; i++) {
+      var item = fileQueue[i];
+      if (item.status !== 'waiting' && item.status !== 'error') continue;
+
+      item.status = 'uploading';
+      item.error = null;
+      renderQueue();
+
+      // Animate progress bar
+      var progEl = document.getElementById('prog-' + item.id);
+      if (progEl) {
+        progEl.style.width = '30%';
+        setTimeout(function() {
+          if (progEl) progEl.style.width = '70%';
+        }, 400);
+      }
+
+      var formData = new FormData();
+      formData.append('file', item.file);
+      formData.append('uploadType', currentType);
+      formData.append('subjectCode', subject);
+
+      if (currentType === 'material') {
+        formData.append('unit',
+          document.getElementById('selectedUnit').value);
+        formData.append('title',
+          item.file.name.replace('.pdf', '').replace(/_/g, ' '));
+      } else {
+        formData.append('examType',
+          document.getElementById('selectedExamType').value);
+        formData.append('year',
+          document.getElementById('selectedYear').value);
+        formData.append('semesterType',
+          document.getElementById('selectedSemType').value);
+      }
+
+      try {
+        var res = await fetch('/bulk/upload/single', {
+          method: 'POST',
+          body: formData
+        });
+        var data = await res.json();
+
+        if (progEl) progEl.style.width = '100%';
+
+        if (data.success) {
+          item.status = 'success';
+        } else {
+          item.status = 'error';
+          item.error = data.error || 'Upload failed.';
+        }
+      } catch (err) {
+        item.status = 'error';
+        item.error = 'Network error.';
+        if (progEl) progEl.style.width = '0%';
+      }
+
+      renderQueue();
+      // Small delay between files
+      await new Promise(function(r) { setTimeout(r, 300); });
+    }
+
+    isUploading = false;
+    document.getElementById('uploadAllBtn').disabled = false;
+    document.getElementById('uploadAllBtn').innerHTML =
+      '<i class="bi bi-cloud-upload me-2"></i>Upload All Files';
+
+    var failed = fileQueue.filter(function(f) {
+      return f.status === 'error';
+    }).length;
+    var success = fileQueue.filter(function(f) {
+      return f.status === 'success';
+    }).length;
+
+    if (failed === 0) {
+      Toast.success('All ' + success + ' file' +
+        (success !== 1 ? 's' : '') + ' uploaded successfully!');
+      document.getElementById('retryBar').style.display = 'none';
+    } else {
+      Toast.warning(success + ' uploaded, ' + failed + ' failed.');
+      document.getElementById('retryBar').style.display = 'block';
+    }
+  }
+
+  // ── Retry Failed ──
+  function retryFailed() {
+    fileQueue.forEach(function(f) {
+      if (f.status === 'error') {
+        f.status = 'waiting';
+        f.error = null;
+      }
+    });
+    renderQueue();
+    document.getElementById('retryBar').style.display = 'none';
+    startUpload();
+  }
+
+  // ── Update Summary ──
+  function updateSummary() {
+    var total = fileQueue.length;
+    var success = fileQueue.filter(function(f) {
+      return f.status === 'success';
+    }).length;
+    var errors = fileQueue.filter(function(f) {
+      return f.status === 'error';
+    }).length;
+    var waiting = fileQueue.filter(function(f) {
+      return f.status === 'waiting';
+    }).length;
+
+    document.getElementById('total-count').textContent = total;
+    document.getElementById('success-count').textContent = success;
+    document.getElementById('error-count').textContent = errors;
+    document.getElementById('waiting-count').textContent = waiting;
+  }
+
+  // ── Drag and Drop ──
+  var dz = document.getElementById('dropZone');
+  dz.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    dz.classList.add('dragover');
+  });
+  dz.addEventListener('dragleave', function() {
+    dz.classList.remove('dragover');
+  });
+  dz.addEventListener('drop', function(e) {
+    e.preventDefault();
+    dz.classList.remove('dragover');
+    addFiles(e.dataTransfer.files);
+  });
+</script>
+</body>
+</html>
