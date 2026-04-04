@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= subject.name %> — Forum</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="/css/main.css" rel="stylesheet">
+  <style>
+    body { background:#f0f4ff; font-family:'Segoe UI',sans-serif; }
+    .forum-hero {
+      background:linear-gradient(135deg,#1a1a2e,#003399);
+      border-radius:20px; color:white;
+      padding:28px 32px; margin-bottom:24px;
+    }
+    .post-card {
+      background:white; border-radius:14px;
+      border:0.5px solid #e0e7ff; padding:18px 22px;
+      margin-bottom:10px; transition:all 0.2s;
+      cursor:pointer; text-decoration:none;
+      display:block; color:inherit;
+    }
+    .post-card:hover {
+      box-shadow:0 4px 20px rgba(0,51,153,0.1);
+      border-color:#c5d8ff; color:inherit;
+      transform:translateY(-2px);
+    }
+    .post-card.pinned { border-left:4px solid #FFB800; }
+    .post-card.resolved { opacity:0.75; }
+    .author-chip {
+      display:inline-flex; align-items:center;
+      gap:5px; font-size:0.75rem; font-weight:600;
+      padding:3px 10px; border-radius:20px;
+    }
+    .chip-student { background:#eef2ff; color:#003399; }
+    .chip-faculty { background:#e8f5e9; color:#2e7d32; }
+    .chip-admin { background:#fff3e0; color:#e65100; }
+    .meta-tag {
+      font-size:0.72rem; color:#aaa;
+      display:inline-flex; align-items:center; gap:4px;
+    }
+    .resolved-badge {
+      background:#e8f5e9; color:#2e7d32;
+      font-size:0.7rem; font-weight:700;
+      padding:2px 8px; border-radius:6px;
+    }
+    .filter-btn {
+      padding:6px 16px; border-radius:20px;
+      font-size:0.82rem; font-weight:600;
+      border:1.5px solid #e0e7ff; background:white;
+      color:#666; cursor:pointer; transition:all 0.15s;
+      text-decoration:none; display:inline-block;
+    }
+    .filter-btn.active,
+    .filter-btn:hover {
+      background:#003399; color:white; border-color:#003399;
+    }
+    .ask-form {
+      background:white; border-radius:16px;
+      border:0.5px solid #e0e7ff; padding:24px;
+      margin-bottom:24px;
+    }
+    .form-control:focus {
+      border-color:#003399;
+      box-shadow:0 0 0 3px rgba(0,51,153,0.12);
+    }
+    .btn-post {
+      background:linear-gradient(135deg,#003399,#0055cc);
+      color:white; border:none; border-radius:10px;
+      padding:10px 24px; font-weight:700;
+      font-size:0.88rem; cursor:pointer;
+    }
+    .empty-state {
+      text-align:center; padding:48px 20px;
+      background:white; border-radius:16px;
+      border:2px dashed #e0e7ff; color:#bbb;
+    }
+    .back-btn {
+      background:white; color:#003399;
+      border:2px solid #e0e7ff; border-radius:10px;
+      padding:7px 16px; font-weight:600;
+      font-size:0.82rem; text-decoration:none;
+      display:inline-flex; align-items:center;
+      gap:6px; margin-bottom:16px;
+    }
+    .back-btn:hover {
+      background:#003399; color:white; border-color:#003399;
+    }
+    .stat-chip {
+      background:rgba(255,255,255,0.15);
+      border-radius:10px; padding:8px 16px;
+      text-align:center;
+    }
+  </style>
+</head>
+<body data-authenticated="true">
+
+<% if (user.role === 'student') { %>
+  <%- include('../partials/studentNavbar') %>
+<% } else { %>
+  <%- include('../partials/facultyNavbar') %>
+<% } %>
+
+<div class="container-fluid px-3 px-md-4 py-4"
+  style="max-width:900px;margin:0 auto;">
+
+  <a href="<%= user.role === 'student' ? '/student/dashboard' : '/faculty/dashboard' %>"
+    class="back-btn">
+    <i class="bi bi-arrow-left"></i>Back
+  </a>
+
+  <!-- Hero -->
+  <div class="forum-hero">
+    <div class="d-flex align-items-start
+      justify-content-between flex-wrap gap-3">
+      <div>
+        <span style="background:rgba(255,255,255,0.15);
+          padding:3px 12px;border-radius:20px;
+          font-size:0.75rem;font-weight:700;">
+          <%= subject.subjectCode %>
+        </span>
+        <h4 class="fw-bold mt-2 mb-1"><%= subject.name %></h4>
+        <div style="opacity:0.75;font-size:0.82rem;">
+          <i class="bi bi-chat-dots-fill me-1"></i>Discussion Forum
+        </div>
+      </div>
+      <div class="d-flex gap-3 flex-wrap">
+        <div class="stat-chip">
+          <div style="font-size:1.3rem;font-weight:700;">
+            <%= totalPosts %>
+          </div>
+          <div style="font-size:0.72rem;opacity:0.75;">Questions</div>
+        </div>
+        <div class="stat-chip">
+          <div style="font-size:1.3rem;font-weight:700;">
+            <%= resolvedCount %>
+          </div>
+          <div style="font-size:0.72rem;opacity:0.75;">Resolved</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ask a Question Form -->
+  <div class="ask-form">
+    <h6 class="fw-bold mb-3" style="font-size:0.92rem;">
+      <i class="bi bi-question-circle-fill me-2"
+        style="color:#003399;"></i>Ask a Question
+    </h6>
+    <form action="/forum/<%= subject.subjectCode %>/new"
+      method="POST" id="postForm">
+      <div class="mb-3">
+        <input type="text" name="title"
+          class="form-control" maxlength="300" required
+          placeholder="What's your question? Be specific..."
+          style="border-radius:10px;border-color:#e0e7ff;
+            padding:10px 14px;font-size:0.9rem;">
+      </div>
+      <div class="mb-3">
+        <textarea name="content" class="form-control"
+          rows="3" maxlength="2000" required
+          placeholder="Provide more details about your question..."
+          style="border-radius:10px;border-color:#e0e7ff;
+            padding:10px 14px;font-size:0.88rem;resize:none;">
+        </textarea>
+      </div>
+      <div class="d-flex justify-content-end">
+        <button type="submit" class="btn-post">
+          <i class="bi bi-send-fill me-2"></i>Post Question
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Filters -->
+  <div class="d-flex gap-2 flex-wrap mb-3">
+    <a href="/forum/<%= subject.subjectCode %>"
+      class="filter-btn <%= filter==='all'?'active':'' %>">
+      All (<%= totalPosts %>)
+    </a>
+    <a href="/forum/<%= subject.subjectCode %>?filter=unresolved"
+      class="filter-btn <%= filter==='unresolved'?'active':'' %>">
+      Open (<%= totalPosts - resolvedCount %>)
+    </a>
+    <a href="/forum/<%= subject.subjectCode %>?filter=resolved"
+      class="filter-btn <%= filter==='resolved'?'active':'' %>">
+      <i class="bi bi-check-circle me-1"></i>
+      Resolved (<%= resolvedCount %>)
+    </a>
+    <a href="/forum/<%= subject.subjectCode %>?filter=pinned"
+      class="filter-btn <%= filter==='pinned'?'active':'' %>">
+      <i class="bi bi-pin-fill me-1"
+        style="color:#FFB800;"></i>Pinned
+    </a>
+  </div>
+
+  <!-- Posts List -->
+  <% if (posts.length === 0) { %>
+    <div class="empty-state">
+      <i class="bi bi-chat-square"
+        style="font-size:2.5rem;display:block;margin-bottom:12px;"></i>
+      <h6 style="color:#999;">No questions yet</h6>
+      <p style="font-size:0.82rem;color:#bbb;margin:0;">
+        Be the first to ask a question about
+        <%= subject.name %>!
+      </p>
+    </div>
+  <% } else { %>
+    <% posts.forEach(function(post) { %>
+      <a href="/forum/<%= subject.subjectCode %>/post/<%= post._id %>"
+        class="post-card
+          <%= post.isPinned ? 'pinned' : '' %>
+          <%= post.isResolved ? 'resolved' : '' %>">
+
+        <div class="d-flex align-items-start
+          justify-content-between gap-2 mb-2">
+          <div class="d-flex align-items-center
+            gap-2 flex-wrap">
+            <span class="author-chip
+              chip-<%= post.authorRole %>">
+              <i class="bi bi-person-fill"></i>
+              <%= post.authorName %>
+              <% if (post.authorRole !== 'student') { %>
+                <i class="bi bi-patch-check-fill"
+                  style="color:#1565c0;"></i>
+              <% } %>
+            </span>
+            <% if (post.isPinned) { %>
+              <span style="color:#FFB800;font-size:0.82rem;">
+                <i class="bi bi-pin-fill"></i>
+              </span>
+            <% } %>
+            <% if (post.isResolved) { %>
+              <span class="resolved-badge">
+                <i class="bi bi-check-circle-fill me-1"></i>Resolved
+              </span>
+            <% } %>
+          </div>
+          <span class="meta-tag">
+            <i class="bi bi-clock"></i>
+            <%= new Date(post.createdAt).toLocaleDateString(
+              'en-IN',
+              {day:'numeric',month:'short',year:'numeric'}
+            ) %>
+          </span>
+        </div>
+
+        <h6 class="fw-bold mb-2"
+          style="font-size:0.93rem;color:#1a1a1a;line-height:1.4;">
+          <%= post.title %>
+        </h6>
+
+        <p style="font-size:0.82rem;color:#666;
+          margin-bottom:10px;line-height:1.5;">
+          <%= post.content.length > 150
+            ? post.content.substring(0, 150) + '...'
+            : post.content %>
+        </p>
+
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+          <span class="meta-tag">
+            <i class="bi bi-chat-fill"></i>
+            <%= post.replyCount %> repl<%= post.replyCount === 1 ? 'y' : 'ies' %>
+          </span>
+          <span class="meta-tag">
+            <i class="bi bi-arrow-up-circle-fill"
+              style="<%= post.hasUpvoted ? 'color:#003399' : '' %>"></i>
+            <%= post.upvoteCount %> upvote<%= post.upvoteCount !== 1 ? 's' : '' %>
+          </span>
+          <span class="meta-tag">
+            <i class="bi bi-eye"></i>
+            <%= post.views %> view<%= post.views !== 1 ? 's' : '' %>
+          </span>
+        </div>
+
+      </a>
+    <% }); %>
+  <% } %>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/main.js"></script>
+</body>
+</html>
