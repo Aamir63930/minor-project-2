@@ -630,6 +630,11 @@
                   class="btn btn-view btn-pyq flex-fill text-center <%= !subject.hasPYQ ? 'disabled' : '' %>">
                   <i class="bi bi-file-earmark-pdf me-1"></i>PYQs
                 </a>
+                 <a href="/forum/<%= subject.subjectCode %>"
+                  class="btn btn-view flex-fill text-center"
+                  style="background:#f3e5f5;color:#7b1fa2;border:none;">
+                  <i class="bi bi-chat-dots-fill me-1"></i>Forum
+                </a>
               </div>
 
             </div>
@@ -717,6 +722,11 @@
                 <a href="/student/subjects/<%= subject.subjectCode %>/pyqs"
                   class="btn btn-view btn-pyq flex-fill text-center <%= !subject.hasPYQ ? 'disabled' : '' %>">
                   <i class="bi bi-file-earmark-pdf me-1"></i>PYQs
+                </a>
+                <a href="/forum/<%= subject.subjectCode %>"
+                  class="btn btn-view flex-fill text-center"
+                  style="background:#f3e5f5;color:#7b1fa2;border:none;">
+                  <i class="bi bi-chat-dots-fill me-1"></i>Forum
                 </a>
               </div>
 
