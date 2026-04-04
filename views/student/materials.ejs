@@ -93,9 +93,15 @@
 
 <div class="container-fluid px-3 px-md-4 py-4" style="max-width: 1100px; margin: 0 auto;">
 
-  <a href="/student/dashboard" class="back-btn mb-4 d-inline-flex">
-    <i class="bi bi-arrow-left"></i> Back to Dashboard
+<div class="d-flex gap-2 mb-4 flex-wrap">
+  <a href="/student/dashboard" class="back-btn">
+    <i class="bi bi-arrow-left"></i>Back to Dashboard
   </a>
+  <a href="/forum/<%= subject.subjectCode %>"
+    style="background:#f3e5f5;color:#7b1fa2;border:2px solid #e1bee7;border-radius:10px;padding:8px 16px;font-weight:600;font-size:0.85rem;text-decoration:none;display:inline-flex;align-items:center;gap:6px;">
+    <i class="bi bi-chat-dots-fill"></i>Discussion Forum
+  </a>
+</div>
 
   <!-- Subject Hero -->
   <div class="subject-hero">
