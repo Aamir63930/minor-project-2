@@ -253,6 +253,46 @@
       }
     } catch(e) {}
   }
+
+  // Load ratings for this subject
+  window._myRatings = {};
+
+  Promise.all([
+    fetch('/ratings/my/<%= subject.subjectCode %>').then(r => r.json()),
+    fetch('/ratings/stats/<%= subject.subjectCode %>').then(r => r.json())
+  ]).then(function(results) {
+    var myRatings = results[0].ratings || {};
+    var stats = results[1].stats || {};
+    window._myRatings = myRatings;
+
+    // Update each material's display
+    Object.keys(stats).forEach(function(materialId) {
+      var s = stats[materialId];
+      var displayEl = document.getElementById('rating-display-' + materialId);
+      var rateBtn = document.getElementById('rate-btn-' + materialId);
+      var myR = myRatings[materialId];
+
+      if (displayEl) {
+        var starsHTML = '';
+        var filled = Math.round(s.avgStars);
+        for (var i = 1; i <= 5; i++) {
+          starsHTML += '<span class="s' + (i <= filled ? ' filled' : '') + '">★</span>';
+        }
+        displayEl.innerHTML =
+          '<div class="stars-small">' + starsHTML + '</div>' +
+          '<span style="font-weight:700;color:#333;">' + s.avgStars + '</span>' +
+          '<span style="color:#aaa;">(' + s.totalRatings + ')</span>' +
+          (myR ? '<span style="color:#2e7d32;font-size:0.68rem;">✓ You rated ' + myR.stars + '★</span>' : '');
+      }
+
+      if (rateBtn && myR) {
+        rateBtn.innerHTML = '<i class="bi bi-star-fill" style="color:#FFB800;"></i> Edit Rating';
+        rateBtn.style.background = '#fff8e1';
+        rateBtn.style.color = '#f57c00';
+      }
+    });
+  }).catch(function() {});  
+  
 </script>
 
 <!-- Rating Modal -->
