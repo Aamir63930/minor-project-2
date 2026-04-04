@@ -16,17 +16,21 @@
     }
     .post-card {
       background:white; border-radius:14px;
-      border:0.5px solid #e0e7ff; padding:18px 22px;
+      border:1.5px solid #d0d9ff; padding:18px 22px;
       margin-bottom:10px; transition:all 0.2s;
       cursor:pointer; text-decoration:none;
       display:block; color:inherit;
+      box-shadow: 0 2px 8px rgba(0,51,153,0.06);
     }
     .post-card:hover {
-      box-shadow:0 4px 20px rgba(0,51,153,0.1);
-      border-color:#c5d8ff; color:inherit;
+      box-shadow:0 6px 24px rgba(0,51,153,0.13);
+      border-color:#7b9ef0; color:inherit;
       transform:translateY(-2px);
     }
-    .post-card.pinned { border-left:4px solid #FFB800; }
+    .post-card.pinned {
+      border-left:4px solid #FFB800;
+      border-color: #FFB800;
+    }
     .post-card.resolved { opacity:0.75; }
     .author-chip {
       display:inline-flex; align-items:center;

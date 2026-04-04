@@ -611,29 +611,32 @@
               </div>
 
               <!-- Subject Footer — Action Buttons -->
-              <div class="subject-footer d-flex gap-2 flex-wrap">
-                <a href="/student/subjects/<%= subject.subjectCode %>/syllabus"
-                  class="btn btn-view flex-fill text-center"
-                  style="background:<%= subject.hasSyllabus ? '#e8f5e9' : '#f5f5f5' %>;
-                          color:<%= subject.hasSyllabus ? '#2e7d32' : '#bbb' %>;"
-                  title="<%= subject.hasSyllabus ? 'View Syllabus' : 'Syllabus not uploaded yet' %>">
-                  <i class="bi bi-journal-text me-1"></i>Syllabus
-                  <% if (subject.hasSyllabus) { %>
-                    <i class="bi bi-check-circle-fill ms-1" style="font-size:0.65rem;"></i>
-                  <% } %>
-                </a>
-                <a href="/student/subjects/<%= subject.subjectCode %>/materials"
-                  class="btn btn-view btn-materials flex-fill text-center">
-                  <i class="bi bi-book me-1"></i>Materials
-                </a>
-                <a href="/student/subjects/<%= subject.subjectCode %>/pyqs"
-                  class="btn btn-view btn-pyq flex-fill text-center <%= !subject.hasPYQ ? 'disabled' : '' %>">
-                  <i class="bi bi-file-earmark-pdf me-1"></i>PYQs
-                </a>
-                 <a href="/forum/<%= subject.subjectCode %>"
-                  class="btn btn-view flex-fill text-center"
-                  style="background:#f3e5f5;color:#7b1fa2;border:none;">
-                  <i class="bi bi-chat-dots-fill me-1"></i>Forum
+              <div class="subject-footer">
+                <!-- Row 1: Syllabus + Materials + PYQs -->
+                <div class="d-flex gap-2 mb-2">
+                  <a href="/student/subjects/<%= subject.subjectCode %>/syllabus"
+                    class="btn btn-view flex-fill text-center"
+                    style="background:<%= subject.hasSyllabus ? '#e8f5e9' : '#f5f5f5' %>;
+                            color:<%= subject.hasSyllabus ? '#2e7d32' : '#bbb' %>;">
+                    <i class="bi bi-journal-text me-1"></i>Syllabus
+                    <% if (subject.hasSyllabus) { %>
+                      <i class="bi bi-check-circle-fill ms-1" style="font-size:0.65rem;"></i>
+                    <% } %>
+                  </a>
+                  <a href="/student/subjects/<%= subject.subjectCode %>/materials"
+                    class="btn btn-view btn-materials flex-fill text-center">
+                    <i class="bi bi-book me-1"></i>Materials
+                  </a>
+                  <a href="/student/subjects/<%= subject.subjectCode %>/pyqs"
+                    class="btn btn-view btn-pyq flex-fill text-center <%= !subject.hasPYQ ? 'disabled' : '' %>">
+                    <i class="bi bi-file-earmark-pdf me-1"></i>PYQs
+                  </a>
+                </div>
+                <!-- Row 2: Forum (full width) -->
+                <a href="/forum/<%= subject.subjectCode %>"
+                  class="btn btn-view w-100 text-center d-flex align-items-center justify-content-center gap-1"
+                  style="background:#f3e5f5;color:#7b1fa2;border:none;font-size:0.78rem;">
+                  <i class="bi bi-chat-dots-fill"></i>Discussion Forum
                 </a>
               </div>
 
@@ -704,30 +707,41 @@
                 </div>
               </div>
 
-              <div class="subject-footer d-flex gap-2 flex-wrap">
-                <a href="/student/subjects/<%= subject.subjectCode %>/syllabus"
-                  class="btn btn-view flex-fill text-center"
-                  style="background:<%= subject.hasSyllabus ? '#e8f5e9' : '#f5f5f5' %>;
-                          color:<%= subject.hasSyllabus ? '#2e7d32' : '#bbb' %>;"
-                  title="<%= subject.hasSyllabus ? 'View Syllabus' : 'Syllabus not uploaded yet' %>">
-                  <i class="bi bi-journal-text me-1"></i>Syllabus
-                  <% if (subject.hasSyllabus) { %>
-                    <i class="bi bi-check-circle-fill ms-1" style="font-size:0.65rem;"></i>
-                  <% } %>
-                </a>
-                <a href="/student/subjects/<%= subject.subjectCode %>/materials"
-                  class="btn btn-view btn-materials flex-fill text-center">
-                  <i class="bi bi-book me-1"></i>Materials
-                </a>
-                <a href="/student/subjects/<%= subject.subjectCode %>/pyqs"
-                  class="btn btn-view btn-pyq flex-fill text-center <%= !subject.hasPYQ ? 'disabled' : '' %>">
-                  <i class="bi bi-file-earmark-pdf me-1"></i>PYQs
-                </a>
+              <div class="subject-footer">
+                <!-- Row 1 -->
+                <div class="d-flex gap-2 mb-2 flex-wrap">
+                  <!-- Syllabus (with status + styling) -->
+                  <a href="/student/subjects/<%= subject.subjectCode %>/syllabus"
+                    class="btn btn-view flex-fill text-center"
+                    style="background:<%= subject.hasSyllabus ? '#e8f5e9' : '#f5f5f5' %>;
+                            color:<%= subject.hasSyllabus ? '#2e7d32' : '#bbb' %>;"
+                    title="<%= subject.hasSyllabus ? 'View Syllabus' : 'Syllabus not uploaded yet' %>">
+                    <i class="bi bi-journal-text me-1"></i>Syllabus
+                    <% if (subject.hasSyllabus) { %>
+                      <i class="bi bi-check-circle-fill ms-1" style="font-size:0.65rem;"></i>
+                    <% } %>
+                  </a>
+                  <!-- Lab Sheets (renamed Materials) -->
+                  <a href="/student/subjects/<%= subject.subjectCode %>/materials"
+                    class="btn btn-view btn-materials flex-fill text-center">
+                    <i class="bi bi-file-earmark-text me-1"></i>Lab Sheets
+                  </a>
+                </div>
+                <!-- Row 2 -->
+                <div class="d-flex gap-2 mb-2 flex-wrap">
+                  <!-- PYQs (with disable logic) -->
+                  <a href="/student/subjects/<%= subject.subjectCode %>/pyqs"
+                    class="btn btn-view btn-pyq flex-fill text-center <%= !subject.hasPYQ ? 'disabled' : '' %>">
+                    <i class="bi bi-file-earmark-pdf me-1"></i>PYQs
+                  </a>
+                </div>
+                <!-- Forum (full width) -->
                 <a href="/forum/<%= subject.subjectCode %>"
-                  class="btn btn-view flex-fill text-center"
-                  style="background:#f3e5f5;color:#7b1fa2;border:none;">
-                  <i class="bi bi-chat-dots-fill me-1"></i>Forum
+                  class="btn btn-view w-100 text-center d-flex align-items-center justify-content-center gap-1"
+                  style="background:#f3e5f5;color:#7b1fa2;border:none;font-size:0.78rem;">
+                  <i class="bi bi-chat-dots-fill"></i>Discussion Forum
                 </a>
+
               </div>
 
             </div>
