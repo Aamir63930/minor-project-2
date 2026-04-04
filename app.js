@@ -115,6 +115,7 @@ app.use('/notifications', require('./routes/notifications'));
 app.use('/announcements', require('./routes/announcements'));
 app.use('/bookmarks', require('./routes/bookmarks'));
 app.use('/ratings', require('./routes/ratings'));
+app.use('/forum', require('./routes/forum'));
 
 // ─── Root Redirect ───────────────────────────
 app.get('/', (req, res) => res.redirect('/auth/landing'));
