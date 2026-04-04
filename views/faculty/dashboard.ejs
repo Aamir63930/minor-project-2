@@ -335,6 +335,9 @@
                     &nbsp;at&nbsp;
                     <%= new Date(mat.uploadedAt).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true}) %>
                 </div>
+                <div style="font-size:0.68rem;color:#aaa;margin-top:2px;"
+                  id="fac-rating-<%= mat._id %>">
+                </div>
                 </div>
                 <form action="/faculty/material/delete/<%= mat._id %>" method="POST"
                     data-confirm="Delete '<%= mat.title %>'? This cannot be undone.">
@@ -402,5 +405,38 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="/js/main.js"></script>
+
+<script>
+  // Load ratings for recently uploaded materials
+  var materialIds = [
+    <% recentMaterials.forEach((m, i) => { %>
+      '<%= m._id %>'<%= i < recentMaterials.length - 1 ? ',' : '' %>
+    <% }); %>
+  ];
+
+  materialIds.forEach(function(id) {
+    fetch('/ratings/stats/' + id)
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.stats && data.stats[id]) {
+          var s = data.stats[id];
+          var el = document.getElementById('fac-rating-' + id);
+          if (el) {
+            var stars = '';
+            for (var i = 1; i <= 5; i++) {
+              stars += '<span style="color:' +
+                (i <= Math.round(s.avgStars) ? '#FFB800' : '#ddd') +
+                ';font-size:0.75rem;">★</span>';
+            }
+            el.innerHTML = stars +
+              ' <span style="font-weight:600;">' + s.avgStars + '</span>' +
+              ' <span style="color:#bbb;">(' + s.totalRatings + ' rating' +
+              (s.totalRatings !== 1 ? 's' : '') + ')</span>';
+          }
+        }
+      }).catch(function() {});
+  });
+</script>
+
 </body>
 </html>
