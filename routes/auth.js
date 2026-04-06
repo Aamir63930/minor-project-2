@@ -234,7 +234,8 @@ router.get('/logout', (req, res) => {
   res.set('Pragma', 'no-cache');
 
   // Redirect to MS logout → comes back to landing after
-  const postLogout = encodeURIComponent('http://localhost:3000/auth/landing');
+  const portalUrl = process.env.PORTAL_URL || 'http://localhost:3000';
+  const postLogout = encodeURIComponent(`${portalUrl}/auth/landing`);
   return res.redirect(
     `https://login.microsoftonline.com/common/oauth2/v2.0/logout?post_logout_redirect_uri=${postLogout}`
   );
