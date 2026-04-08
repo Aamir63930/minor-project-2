@@ -1,92 +1,109 @@
+<% const person = typeof faculty !== 'undefined' ? faculty : user; %>
+
 <nav class="navbar navbar-expand-lg sticky-top" style="background: linear-gradient(90deg,#1a1a2e,#16213e); box-shadow: 0 2px 15px rgba(0,0,0,0.3);">
   <div class="container-fluid px-4">
 
+    <!-- LOGO -->
     <a class="navbar-brand d-flex align-items-center gap-2 text-white" href="/faculty/dashboard">
       <i class="bi bi-mortarboard-fill fs-4" style="color:#FFB800;"></i>
-      <span class="fw-bold" style="font-size:1rem;">SOET Portal</span>
-      <% if (typeof user !== 'undefined' && user.role === 'admin') { %>
+      <span class="fw-bold" style="font-size:1rem;">
+        SOET <span style="color:#FFB800;">Portal</span>
+      </span>
+
+      <% if (user?.role === 'admin') { %>
         <span class="badge ms-1" style="background:#FFB800;color:#1a1a1a;font-size:0.65rem;">ADMIN</span>
       <% } %>
     </a>
 
+    <!-- TOGGLER -->
     <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#facultyNav">
       <span class="navbar-toggler-icon" style="filter:invert(1);"></span>
     </button>
 
     <div class="collapse navbar-collapse" id="facultyNav">
+
+      <!-- NAV LINKS -->
       <ul class="navbar-nav me-auto gap-1 ms-3">
+
         <li class="nav-item">
-          <a class="nav-link text-white-50 d-flex align-items-center gap-1" href="/faculty/dashboard">
+          <a class="nav-link d-flex align-items-center gap-1 <%= currentPath === '/faculty/dashboard' ? 'text-warning fw-semibold border-bottom border-warning' : 'text-white-50' %>" href="/faculty/dashboard">
             <i class="bi bi-house-fill"></i> Dashboard
           </a>
         </li>
+
         <li class="nav-item">
           <a class="nav-link text-white-50 d-flex align-items-center gap-1" href="/faculty/upload/material">
             <i class="bi bi-upload"></i> Upload Material
           </a>
         </li>
+
         <li class="nav-item">
           <a class="nav-link text-white-50 d-flex align-items-center gap-1" href="/faculty/upload/pyq">
             <i class="bi bi-file-earmark-plus"></i> Upload PYQ
           </a>
         </li>
+
         <li class="nav-item">
-          <a class="nav-link text-white-50 d-flex align-items-center gap-1"
-            href="/bulk/upload">
-            <i class="bi bi-cloud-upload-fill"></i>Bulk Upload
+          <a class="nav-link text-white-50 d-flex align-items-center gap-1" href="/bulk/upload">
+            <i class="bi bi-cloud-upload-fill"></i> Bulk Upload
           </a>
         </li>
+
         <li class="nav-item">
-          <a class="nav-link text-white-50 d-flex align-items-center gap-1"
-            href="/faculty/upload/syllabus">
-            <i class="bi bi-journal-text"></i>Syllabus
+          <a class="nav-link text-white-50 d-flex align-items-center gap-1" href="/faculty/upload/syllabus">
+            <i class="bi bi-journal-text"></i> Syllabus
           </a>
         </li>        
+
         <li class="nav-item">
           <a class="nav-link text-white-50 d-flex align-items-center gap-1" href="/announcements">
             <i class="bi bi-megaphone-fill"></i> Announcements
           </a>
         </li>
-        <!-- <li class="nav-item">
-          <a class="nav-link text-white-50 d-flex align-items-center gap-1"
-            href="/faculty/dashboard">
-            <i class="bi bi-chat-dots-fill"></i>Forum
+
+        <% if (user?.role === 'admin') { %>
+        <li class="nav-item">
+          <a class="nav-link d-flex align-items-center gap-1" href="/faculty/admin/all-uploads" style="color:#FFB800;">
+            <i class="bi bi-shield-fill"></i> Admin Panel
           </a>
-        </li>         -->
-        
-        <% if (typeof user !== 'undefined' && user.role === 'admin') { %>
-          <li class="nav-item">
-            <a class="nav-link d-flex align-items-center gap-1" href="/faculty/admin/all-uploads"
-               style="color:#FFB800;">
-              <i class="bi bi-shield-fill"></i> Admin Panel
-            </a>
-          </li>
+        </li>
         <% } %>
+
       </ul>
 
+      <!-- RIGHT SIDE -->
       <div class="d-flex align-items-center gap-3">
+
+        <!-- USER INFO -->
         <div class="text-end d-none d-md-block">
           <div class="text-white fw-semibold" style="font-size:0.88rem;line-height:1.2;">
-            <%= typeof faculty !== 'undefined' ? faculty.name : user.name %>
+            <%= person.name %>
           </div>
           <div class="text-white-50" style="font-size:0.72rem;">
-            <%= typeof faculty !== 'undefined' ? faculty.designation : user.designation %>
+            <%= person.designation %>
           </div>
         </div>
+
+        <!-- AVATAR -->
         <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold"
           style="width:38px;height:38px;background:rgba(255,184,0,0.2);border:2px solid #FFB800;font-size:0.9rem;color:#FFB800;">
-          <%= (typeof faculty !== 'undefined' ? faculty.name : user.name).charAt(0).toUpperCase() %>
+          <%= person.name.charAt(0).toUpperCase() %>
         </div>
+
+        <!-- PASSWORD -->
         <a href="/faculty/change-password" class="btn btn-sm d-flex align-items-center gap-1 me-1"
           style="background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;">
           <i class="bi bi-shield-lock"></i>
           <span class="d-none d-md-inline">Password</span>
         </a>
+
+        <!-- LOGOUT -->
         <a href="/auth/logout" class="btn btn-sm d-flex align-items-center gap-1"
           style="background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;">
           <i class="bi bi-box-arrow-right"></i>
           <span class="d-none d-md-inline">Logout</span>
         </a>
+
       </div>
     </div>
   </div>
