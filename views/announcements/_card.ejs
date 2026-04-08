@@ -1,53 +1,101 @@
-<div class="ann-card <%= ann.isPinned ? 'pinned' : '' %> <%= ann.category === 'Urgent' ? 'urgent' : '' %>">
-  <% if (ann.isPinned) { %>
+<%
+  var isPinned = (ann && ann.isPinned);
+  var bgColor = isPinned ? '#fff3e0' : '#f5f5f5';
+  var textColor = isPinned ? '#e65100' : '#999';
+  var pinIcon = isPinned ? 'bi-pin-fill' : 'bi-pin';
+  var pinText = isPinned ? 'Unpin' : 'Pin';
+
+  var category = (ann && ann.category) ? ann.category : 'General';
+
+  var createdTime = (ann && ann.createdAt) ? new Date(ann.createdAt).getTime() : 0;
+  var isNew = (Date.now() - createdTime) < (24 * 60 * 60 * 1000);
+%>
+
+<div class="ann-card <%= isPinned ? 'pinned' : '' %> <%= category === 'Urgent' ? 'urgent' : '' %>">
+
+  <% if (isPinned) { %>
     <i class="bi bi-pin-fill pin-icon"></i>
   <% } %>
 
+  <!-- TOP SECTION -->
   <div class="d-flex align-items-center gap-2 flex-wrap mb-2">
-    <span class="cat-badge cat-<%= ann.category %>">
-      <% if (ann.category === 'Exam') { %><i class="bi bi-pencil-fill me-1"></i>
-      <% } else if (ann.category === 'Urgent') { %><i class="bi bi-exclamation-triangle-fill me-1"></i>
-      <% } else if (ann.category === 'Holiday') { %><i class="bi bi-calendar-check me-1"></i>
-      <% } else if (ann.category === 'Result') { %><i class="bi bi-trophy-fill me-1"></i>
-      <% } else { %><i class="bi bi-megaphone-fill me-1"></i>
+
+    <span class="cat-badge cat-<%= category %>">
+      <% if (category === 'Exam') { %>
+        <i class="bi bi-pencil-fill me-1"></i>
+      <% } else if (category === 'Urgent') { %>
+        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+      <% } else if (category === 'Holiday') { %>
+        <i class="bi bi-calendar-check me-1"></i>
+      <% } else if (category === 'Result') { %>
+        <i class="bi bi-trophy-fill me-1"></i>
+      <% } else { %>
+        <i class="bi bi-megaphone-fill me-1"></i>
       <% } %>
-      <%= ann.category %>
+      <%= category %>
     </span>
+
     <span class="scope-tag">
-      <%= ann.scope === 'college-wide' ? '🏫 College-wide' : ann.scope === 'course-specific' ? '📚 Course' : '📅 Semester-specific' %>
+      <%= (ann && ann.scope === 'college-wide') ? '🏫 College-wide' 
+        : (ann && ann.scope === 'course-specific') ? '📚 Course' 
+        : '📅 Semester-specific' %>
     </span>
+
     <span style="font-size:0.72rem;color:#aaa;margin-left:auto;">
-      <%= new Date(ann.createdAt).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }) %>
+      <%= (ann && ann.createdAt) ? new Date(ann.createdAt).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }) : '' %>
     </span>
+
   </div>
 
+  <!-- TITLE -->
   <h6 class="fw-bold mb-2" style="font-size:0.97rem;color:#1a1a1a;line-height:1.4;padding-right:24px;">
-    <%= ann.title %>
+    <%= (ann && ann.title) ? ann.title : 'No Title' %>
+    <% if (isNew) { %>
+      <span class="badge bg-success ms-2">NEW</span>
+    <% } %>
   </h6>
 
-  <p style="font-size:0.85rem;color:#555;line-height:1.6;margin-bottom:12px;">
-    <%= ann.content %>
+  <!-- CONTENT -->
+  <p class="short-text" style="font-size:0.85rem;color:#555;line-height:1.6;margin-bottom:12px;">
+    <%= (ann && ann.content) ? ann.content : '' %>
   </p>
 
+  <button onclick="toggleText(this)" class="btn btn-link btn-sm p-0">
+    Read more
+  </button>
+
+  <!-- FOOTER -->
   <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+
     <div style="font-size:0.75rem;color:#aaa;">
-      <i class="bi bi-person-fill me-1"></i><%= ann.postedByName %>
-      <% if (ann.views > 0) { %>
+      <i class="bi bi-person-fill me-1"></i>
+      <%= (ann && ann.postedByName) ? ann.postedByName : 'Unknown' %>
+
+      <% if (ann && ann.views && ann.views > 0) { %>
         &nbsp;·&nbsp;<i class="bi bi-eye me-1"></i><%= ann.views %> views
       <% } %>
-      <% if (ann.expiresAt) { %>
-        &nbsp;·&nbsp;<i class="bi bi-clock me-1"></i>Expires <%= new Date(ann.expiresAt).toLocaleDateString('en-IN', { day:'numeric', month:'short' }) %>
+
+      <% if (ann && ann.expiresAt) { %>
+        &nbsp;·&nbsp;<i class="bi bi-clock me-1"></i>
+        Expires <%= new Date(ann.expiresAt).toLocaleDateString('en-IN', { day:'numeric', month:'short' }) %>
       <% } %>
     </div>
 
-    <% if (user.role === 'faculty' || user.role === 'admin') { %>
+    <!-- ADMIN / FACULTY ACTIONS -->
+    <% if (user && (user.role === 'faculty' || user.role === 'admin')) { %>
       <div class="d-flex gap-2">
+
+        <!-- PIN BUTTON -->
         <button onclick="togglePin('<%= ann._id %>', this)"
-          class="btn btn-sm"
-          style="background:<%= ann.isPinned ? '#fff3e0' : '#f5f5f5' %>;color:<%= ann.isPinned ? '#e65100' : '#999' %>;border:none;border-radius:8px;font-size:0.75rem;font-weight:600;">
-          <i class="bi bi-pin<%= ann.isPinned ? '-fill' : '' %> me-1"></i><%= ann.isPinned ? 'Unpin' : 'Pin' %>
-        </button>
-        <% if (user.role === 'admin' || ann.postedBy && ann.postedBy.toString() === user.id) { %>
+  class="btn btn-sm <%= isPinned ? 'pin-active' : 'pin-inactive' %>">
+
+  <i class="bi <%= isPinned ? 'bi-pin-fill' : 'bi-pin' %> me-1"></i>
+  <%= isPinned ? 'Unpin' : 'Pin' %>
+
+</button>
+
+        <!-- DELETE BUTTON -->
+        <% if (user.role === 'admin' || (ann && ann.postedBy && ann.postedBy.toString() === user.id)) { %>
           <form action="/announcements/<%= ann._id %>/delete" method="POST"
             onsubmit="return confirm('Delete this announcement?')">
             <button type="submit" class="btn btn-sm"
@@ -56,7 +104,9 @@
             </button>
           </form>
         <% } %>
+
       </div>
     <% } %>
+
   </div>
 </div>
