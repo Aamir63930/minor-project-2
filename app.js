@@ -4,18 +4,26 @@ const cookieParser = require('cookie-parser');
 const path = require('path');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
-const mongoSanitize = require('express-mongo-sanitize');
-const xss = require('xss-clean');
 const compression = require('compression');
 const morgan = require('morgan');
+const hpp = require('hpp');
 const connectDB = require('./config/db');
 
 const app = express();
 
-// ─── Connect Database ───────────────────────
-connectDB();
+// ─── Trust Proxy (Important for deployment) ───
+app.set('trust proxy', 1);
 
-// ─── Security Headers (Helmet) ──────────────
+// ─── Connect Database ───────────────────────
+connectDB().catch(err => {
+  console.error('❌ DB Connection Failed:', err);
+  process.exit(1);
+});
+
+// ─── Hide Express Signature ────────────────
+app.disable('x-powered-by');
+
+// ─── Security Headers ──────────────────────
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -44,70 +52,70 @@ app.use(helmet({
         "https://graph.microsoft.com",
         "https://cdn.jsdelivr.net"
       ],
-      frameSrc: [
-        "'self'"
-      ],
+      frameSrc: ["'self'"],
       frameAncestors: ["'self'"],
-      objectSrc: ["'self'"],
+      objectSrc: ["'none'"],
       workerSrc: ["'self'", "blob:"],
     }
   },
   crossOriginEmbedderPolicy: false,
+  referrerPolicy: { policy: "no-referrer" }
 }));
 
-// ─── Compression ────────────────────────────
+// ─── Compression ───────────────────────────
 app.use(compression());
 
-// ─── Logging (dev only) ─────────────────────
+// ─── Logging ───────────────────────────────
 if (process.env.NODE_ENV !== 'production') {
   app.use(morgan('dev'));
 }
 
-// ─── Rate Limiting ──────────────────────────
-// General API limiter
+// ─── Prevent Parameter Pollution ───────────
+app.use(hpp());
+
+// ─── Rate Limiting ─────────────────────────
 const generalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 15 * 60 * 1000,
   max: 200,
-  message: 'Too many requests from this IP. Please try again after 15 minutes.',
+  message: 'Too many requests. Try again later.',
   standardHeaders: true,
   legacyHeaders: false,
 });
 
-// Strict limiter for login routes
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10, // max 10 login attempts per 15 min
-  message: 'Too many login attempts. Please try again after 15 minutes.',
-  standardHeaders: true,
-  legacyHeaders: false,
+  max: 10,
+  message: 'Too many login attempts. Try again later.',
   skipSuccessfulRequests: true,
 });
 
-app.use(generalLimiter);
+// Apply limiter only to API routes (better performance)
+app.use('/auth', generalLimiter);
+app.use('/student', generalLimiter);
+app.use('/faculty', generalLimiter);
 app.use('/auth/login', loginLimiter);
 
-// ─── Body Parsers ───────────────────────────
+// ─── Body Parsers ──────────────────────────
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 app.use(express.json({ limit: '10kb' }));
 
-// ─── Cookie Parser ──────────────────────────
+// ─── Cookies ───────────────────────────────
 app.use(cookieParser());
 
-// ─── Data Sanitization ──────────────────────
-// Note: Both mongoSanitize and xss-clean are incompatible with Express 5.x (req.query is read-only)
-// Express provides built-in protection against NoSQL injection and XSS for most cases
-// app.use(mongoSanitize()); // prevent NoSQL injection
-// app.use(xss());           // prevent XSS attacks
-
-// ─── Static Files ───────────────────────────
+// ─── Static Files ──────────────────────────
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// ─── View Engine ────────────────────────────
+// ─── View Engine ───────────────────────────
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-// ─── Routes ─────────────────────────────────
+// ─── Health Check Route (for deployment) ───
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'OK' });
+});
+
+// ─── Routes ────────────────────────────────
 app.use('/auth', require('./routes/auth'));
 app.use('/student', require('./routes/student'));
 app.use('/faculty', require('./routes/faculty'));
@@ -118,27 +126,40 @@ app.use('/ratings', require('./routes/ratings'));
 app.use('/forum', require('./routes/forum'));
 app.use('/bulk', require('./routes/bulk'));
 
-// ─── Root Redirect ───────────────────────────
+// ─── Root Redirect ─────────────────────────
 app.get('/', (req, res) => res.redirect('/auth/landing'));
 
-// ─── 404 Handler ────────────────────────────
+// ─── 404 Handler ───────────────────────────
 app.use((req, res) => {
   res.status(404).render('404', { url: req.originalUrl });
 });
 
-// ─── Global Error Handler ───────────────────
+// ─── Global Error Handler ──────────────────
 app.use((err, req, res, next) => {
   console.error('💥 Error:', err.stack);
+
   const statusCode = err.statusCode || 500;
+
   res.status(statusCode).render('error', {
     message: process.env.NODE_ENV === 'production'
-      ? 'Something went wrong on our end.'
+      ? 'Something went wrong.'
       : err.message,
     user: req.user || null
   });
 });
 
-// ─── Start Server ────────────────────────────
+// ─── Graceful Shutdown ─────────────────────
+process.on('SIGINT', () => {
+  console.log('\n🛑 Server shutting down...');
+  process.exit(0);
+});
+
+process.on('SIGTERM', () => {
+  console.log('🛑 SIGTERM received. Closing server...');
+  process.exit(0);
+});
+
+// ─── Start Server ──────────────────────────
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`\n🚀 SOET Portal running at http://localhost:${PORT}`);
