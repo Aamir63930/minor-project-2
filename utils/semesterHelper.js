@@ -1,52 +1,43 @@
 /**
- * University semester logic for KR Mangalam University
- *
- * Odd semesters  (1,3,5,7) → July – November
- * Even semesters (2,4,6,8) → January – June
- *
- * Example: Enrolled 2024
- *   Sem 1 → Jul–Nov 2024
- *   Sem 2 → Jan–Jun 2025
- *   Sem 3 → Jul–Nov 2025
- *   Sem 4 → Jan–Jun 2026  ← you are here (Feb 2026)
+ * Improved Semester Logic (KR Mangalam University)
  */
+
 function getCurrentSemester(enrollmentYear) {
   const now = new Date();
   const currentYear = now.getFullYear();
-  const currentMonth = now.getMonth() + 1; // 1–12
+  const currentMonth = now.getMonth() + 1;
 
-  // Years since enrollment (0-based)
-  const yearsDiff = currentYear - enrollmentYear;
+  let semester = 1;
 
-  // Which half of year?
-  // Jan–Jun = even semester of that year
-  // Jul–Dec = odd semester of that year
-  const isEvenHalf = currentMonth >= 1 && currentMonth <= 6;
+  // Total years passed since enrollment
+  const yearsPassed = currentYear - enrollmentYear;
 
-  // Each full year = 2 semesters
-  // First year odd half  → sem 1
-  // First year even half → sem 2
-  // Second year odd half → sem 3 ... etc
-  let semester;
-  if (isEvenHalf) {
-    semester = yearsDiff * 2; // e.g. 2024 enrolled, 2026 even → (2)*2 = 4
+  // Base semesters from full years
+  semester = yearsPassed * 2;
+
+  // Determine current half
+  if (currentMonth >= 7) {
+    // July–Dec → odd semester
+    semester += 1;
   } else {
-    semester = yearsDiff * 2 + 1; // odd half
+    // Jan–Jun → even semester
+    semester += 2;
   }
 
-  // Clamp between 1 and 8
-  semester = Math.max(1, Math.min(8, semester));
-  return semester;
+  // Fix: If still in enrollment year's Jan–Jun, stay in Sem 1
+  if (currentYear === enrollmentYear && currentMonth <= 6) {
+    semester = 1;
+  }
+
+  // Clamp between 1–8
+  return Math.max(1, Math.min(8, semester));
 }
 
 function getSemesterLabel(semester) {
-  const labels = {
-    1: '1st Semester', 2: '2nd Semester',
-    3: '3rd Semester', 4: '4th Semester',
-    5: '5th Semester', 6: '6th Semester',
-    7: '7th Semester', 8: '8th Semester',
-  };
-  return labels[semester] || `Semester ${semester}`;
+  const suffix = ["th", "st", "nd", "rd"];
+  const v = semester % 100;
+  const label = semester + (suffix[(v - 20) % 10] || suffix[v] || suffix[0]);
+  return `${label} Semester`;
 }
 
 function getSemesterType(semester) {
@@ -54,15 +45,45 @@ function getSemesterType(semester) {
 }
 
 function getAcademicYear(enrollmentYear, semester) {
-  // Sem 1,2 → year1 – year1+1, Sem 3,4 → year1+1 – year1+2, etc
   const offset = Math.floor((semester - 1) / 2);
   const startYear = enrollmentYear + offset;
   return `${startYear}-${String(startYear + 1).slice(2)}`;
+}
+
+/**
+ * NEW: Get semester duration (useful for UI/dashboard)
+ */
+function getSemesterDuration(semester, enrollmentYear) {
+  const yearOffset = Math.floor((semester - 1) / 2);
+  const year = enrollmentYear + yearOffset;
+
+  if (semester % 2 === 0) {
+    return `Jan–Jun ${year + 1}`;
+  } else {
+    return `Jul–Nov ${year}`;
+  }
+}
+
+/**
+ * NEW: Full semester info (best for dashboard use)
+ */
+function getSemesterInfo(enrollmentYear) {
+  const semester = getCurrentSemester(enrollmentYear);
+
+  return {
+    semester,
+    label: getSemesterLabel(semester),
+    type: getSemesterType(semester),
+    academicYear: getAcademicYear(enrollmentYear, semester),
+    duration: getSemesterDuration(semester, enrollmentYear)
+  };
 }
 
 module.exports = {
   getCurrentSemester,
   getSemesterLabel,
   getSemesterType,
-  getAcademicYear
+  getAcademicYear,
+  getSemesterDuration,
+  getSemesterInfo
 };
